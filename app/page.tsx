@@ -25,7 +25,6 @@ import {
   Rocket,
   Gem,
   Globe,
-  FlaskConical,
   AlertTriangle,
   Funnel,
   Diamond,
@@ -48,35 +47,6 @@ const staggerContainer = {
     },
   },
 };
-
-// Entrepreneur types for preview
-const entrepreneurTypes = [
-  {
-    icon: Brain,
-    title: "The Architect",
-    description: "Designs systems, processes, frameworks. Obsessed with how pieces fit together.",
-  },
-  {
-    icon: Sparkles,
-    title: "The Creative",
-    description: "Designs products, experiences, brands. Obsessed with making things feel incredible.",
-  },
-  {
-    icon: BarChart3,
-    title: "The Analyst",
-    description: "Data, metrics, optimization. Obsessed with finding patterns.",
-  },
-  {
-    icon: Users,
-    title: "The Communicator",
-    description: "Narrative, sales, community. Obsessed with connecting with people.",
-  },
-  {
-    icon: Zap,
-    title: "The Builder",
-    description: "Code, infrastructure, making things work. Obsessed with building.",
-  },
-];
 
 // Market Gates
 const marketGates = [
@@ -127,15 +97,6 @@ const mockVentureDNA = {
   ],
 };
 
-// Comparison data
-const comparisonData = [
-  { feature: "Ideas", generic: "Same curated lists for everyone", ventureGates: "AI-generated, filtered by your profile" },
-  { feature: "Personalization", generic: "None", ventureGates: "Gate system based on who you are" },
-  { feature: "Founder-fit", generic: "Doesn't exist", ventureGates: "Core of the product" },
-  { feature: "Output", generic: "Flat list", ventureGates: "Ideas + Scorecard + Venture DNA" },
-  { feature: "Validation", generic: "Superficial", ventureGates: "Market + Personal gates + real signals" },
-];
-
 export default function Home() {
   return (
     <main className="min-h-screen">
@@ -144,10 +105,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center">
                 <Diamond className="w-5 h-5 text-white" />
               </div>
-              <span className="font-serif font-bold text-xl text-neutral-900">VentureGates</span>
+              <span className="font-bold text-xl text-neutral-900">VentureGates</span>
             </div>
             <div className="hidden md:flex items-center gap-8">
               <Link href="#how-it-works" className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors">
@@ -176,13 +137,13 @@ export default function Home() {
             className="text-center"
           >
             <motion.div variants={fadeInUp} className="mb-6">
-              <Badge className="bg-white/80 text-neutral-600 border-neutral-200 px-4 py-1.5 text-sm font-mono">
+              <Badge className="bg-white/80 text-neutral-600 border-neutral-200 px-4 py-1.5 text-sm">
                 Powered by AI · Built by The Agile Monkeys
               </Badge>
             </motion.div>
             <motion.h1
               variants={fadeInUp}
-              className="text-4xl sm:text-5xl lg:text-7xl font-serif font-bold tracking-tight mb-6 text-neutral-900"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-neutral-900"
             >
               Discover What Venture You{" "}
               <span className="gradient-text">Should Build</span>
@@ -190,7 +151,7 @@ export default function Home() {
             </motion.h1>
             <motion.p
               variants={fadeInUp}
-              className="text-lg sm:text-xl text-neutral-600 max-w-3xl mx-auto mb-10 font-light"
+              className="text-lg sm:text-xl text-neutral-600 max-w-3xl mx-auto mb-10"
             >
               No more generic ideas. VentureGates analyzes your founder profile, generates a
               personalized Gate system, and shows you ventures that fit{" "}
@@ -212,7 +173,7 @@ export default function Home() {
             </motion.div>
             <motion.p
               variants={fadeInUp}
-              className="mt-8 text-sm text-neutral-500 flex items-center justify-center gap-2 font-mono"
+              className="mt-8 text-sm text-neutral-500 flex items-center justify-center gap-2"
             >
               <span>Inspired by</span>
               <span className="font-semibold text-neutral-700">The Agile Monkeys</span>
@@ -222,7 +183,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section 2: The Problem - Colorful Gradient Cards */}
+      {/* Section 2: The Problem - MIX: One dark, one accent */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -232,7 +193,7 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold mb-6 text-neutral-900">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-neutral-900">
               90% of startups fail.
               <br />
               <span className="text-neutral-500 font-normal">Most because founders build something that doesn&apos;t fit them.</span>
@@ -240,27 +201,27 @@ export default function Home() {
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Before Card - Warm Gradient */}
+            {/* Before Card - DARK */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="gradient-card-warm border-0 text-white h-full glow-orange overflow-hidden">
+              <Card className="card-dark border-0 h-full">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white/90 font-serif">
-                    <XCircle className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 text-white/90">
+                    <XCircle className="w-5 h-5 text-red-400" />
                     Before: Generic Idea Lists
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-white/90">
+                  <p className="text-neutral-300">
                     Most tools give you the same curated lists regardless of who you are. A
                     delivery app idea for everyone — whether you&apos;re a technical builder or a
                     creative marketer.
                   </p>
-                  <ul className="space-y-2 text-sm text-white/80">
+                  <ul className="space-y-2 text-sm text-neutral-400">
                     <li>• No consideration of founder strengths</li>
                     <li>• Generic market opportunities</li>
                     <li>• Ideas that ignore your context</li>
@@ -269,16 +230,16 @@ export default function Home() {
               </Card>
             </motion.div>
 
-            {/* After Card - Cool Purple Gradient */}
+            {/* After Card - Accent */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="gradient-card-purple border-0 text-white h-full glow-purple overflow-hidden">
+              <Card className="card-accent-purple border-0 h-full glow-subtle">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-white/90 font-serif">
+                  <CardTitle className="flex items-center gap-2 text-white/90">
                     <CheckCircle2 className="w-5 h-5" />
                     After: Your Personalized Gate System
                   </CardTitle>
@@ -300,7 +261,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section 3: How It Works */}
+      {/* Section 3: How It Works - White cards with subtle accents */}
       <section id="how-it-works" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -310,10 +271,10 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <Badge className="bg-white/80 text-neutral-600 border-neutral-200 mb-4 font-mono">
+            <Badge className="bg-white/80 text-neutral-600 border-neutral-200 mb-4">
               How It Works
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-neutral-900">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900">
               From Profile to Actionable Ventures
             </h2>
           </motion.div>
@@ -324,33 +285,25 @@ export default function Home() {
                 step: "01",
                 icon: Users,
                 title: "Tell Us Who You Are",
-                description:
-                  "The AI asks about your entrepreneurial personality, strengths, context, and obsessions.",
-                gradient: "from-violet-500/20 to-fuchsia-500/20",
+                description: "The AI asks about your entrepreneurial personality, strengths, context, and obsessions.",
               },
               {
                 step: "02",
                 icon: Filter,
                 title: "We Generate Your Gates",
-                description:
-                  "We create your personalized filter system: non-negotiables, accelerators, and red flags.",
-                gradient: "from-blue-500/20 to-cyan-500/20",
+                description: "We create your personalized filter system: non-negotiables, accelerators, and red flags.",
               },
               {
                 step: "03",
                 icon: Sparkles,
                 title: "Ideas That Pass YOUR Filters",
-                description:
-                  "We generate disruptive ventures and run them through your gates + market gates.",
-                gradient: "from-amber-500/20 to-orange-500/20",
+                description: "We generate disruptive ventures and run them through your gates + market gates.",
               },
               {
                 step: "04",
                 icon: BarChart3,
                 title: "Compare with Scorecard",
-                description:
-                  "Each idea has a visual scorecard (green/yellow/red) per gate for easy comparison.",
-                gradient: "from-emerald-500/20 to-teal-500/20",
+                description: "Each idea has a visual scorecard (green/yellow/red) per gate for easy comparison.",
               },
             ].map((item, index) => (
               <motion.div
@@ -360,13 +313,13 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <Card className={`bg-gradient-to-br ${item.gradient} border-0 h-full hover:shadow-lg transition-shadow group`}>
+                <Card className="bg-white border-neutral-200 h-full hover:shadow-lg transition-shadow group">
                   <CardContent className="pt-6">
-                    <div className="text-xs font-mono text-neutral-500 mb-4">{item.step}</div>
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4`}>
+                    <div className="text-xs font-mono text-neutral-400 mb-4">{item.step}</div>
+                    <div className="w-12 h-12 rounded-xl bg-neutral-100 flex items-center justify-center mb-4 group-hover:bg-neutral-200 transition-colors">
                       <item.icon className="w-6 h-6 text-neutral-700" />
                     </div>
-                    <h3 className="font-serif font-semibold text-lg mb-2 text-neutral-900">{item.title}</h3>
+                    <h3 className="font-semibold text-lg mb-2 text-neutral-900">{item.title}</h3>
                     <p className="text-sm text-neutral-600">{item.description}</p>
                   </CardContent>
                 </Card>
@@ -376,7 +329,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section 4: What Makes Us Different - Colorful Gradient */}
+      {/* Section 4: What Makes Us Different - DARK CARD */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -386,10 +339,10 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <Badge className="bg-white/80 text-neutral-600 border-neutral-200 mb-4 font-mono">
+            <Badge className="bg-white/80 text-neutral-600 border-neutral-200 mb-4">
               Comparison
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-neutral-900">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-neutral-900">
               What Makes VentureGates Different
             </h2>
           </motion.div>
@@ -400,21 +353,27 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="gradient-card-ocean border-0 text-white overflow-hidden">
+            <Card className="card-dark border-0 overflow-hidden">
               <CardContent className="p-8">
-                <div className="grid grid-cols-3 gap-4 mb-6 text-sm font-mono text-white/70">
+                <div className="grid grid-cols-3 gap-4 mb-6 text-sm font-mono text-neutral-500">
                   <div>Feature</div>
                   <div>Generic Tools</div>
-                  <div>VentureGates</div>
+                  <div className="text-indigo-400">VentureGates</div>
                 </div>
-                <div className="space-y-4">
-                  {comparisonData.map((item, index) => (
+                <div className="space-y-3">
+                  {[
+                    { feature: "Ideas", generic: "Same curated lists for everyone", ventureGates: "AI-generated, filtered by your profile" },
+                    { feature: "Personalization", generic: "None", ventureGates: "Gate system based on who you are" },
+                    { feature: "Founder-fit", generic: "Doesn't exist", ventureGates: "Core of the product" },
+                    { feature: "Output", generic: "Flat list", ventureGates: "Ideas + Scorecard + Venture DNA" },
+                    { feature: "Validation", generic: "Superficial", ventureGates: "Market + Personal gates + real signals" },
+                  ].map((item, index) => (
                     <div
                       key={item.feature}
-                      className="grid grid-cols-3 gap-4 items-center p-4 rounded-xl bg-white/10 backdrop-blur-sm"
+                      className="grid grid-cols-3 gap-4 items-center p-4 rounded-lg bg-white/5"
                     >
-                      <div className="font-medium text-white font-serif">{item.feature}</div>
-                      <div className="text-sm text-white/70">{item.generic}</div>
+                      <div className="font-medium text-white">{item.feature}</div>
+                      <div className="text-sm text-neutral-400">{item.generic}</div>
                       <div className="text-sm text-white font-medium">{item.ventureGates}</div>
                     </div>
                   ))}
@@ -425,7 +384,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section 5: Preview of Venture DNA - Colorful Card */}
+      {/* Section 5: Preview of Venture DNA - White card with dark header */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -435,10 +394,10 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <Badge className="bg-white/80 text-neutral-600 border-neutral-200 mb-4 font-mono">
+            <Badge className="bg-white/80 text-neutral-600 border-neutral-200 mb-4">
               Preview
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold mb-4 text-neutral-900">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-neutral-900">
               Your Venture DNA Profile
             </h2>
             <p className="text-neutral-600 max-w-2xl mx-auto">
@@ -454,38 +413,40 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="max-w-4xl mx-auto"
           >
-            <Card className="gradient-card-green border-0 text-white overflow-hidden glow-green">
-              <CardContent className="p-8">
-                {/* Header */}
-                <div className="flex items-center gap-4 mb-8 pb-8 border-b border-white/20">
-                  <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center">
+            <Card className="bg-white border-neutral-200 overflow-hidden shadow-xl">
+              {/* Header - Dark */}
+              <div className="card-dark p-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center">
                     <Brain className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm text-white/70 mb-1 font-mono">Entrepreneur Type</div>
-                    <div className="text-2xl font-serif font-bold">{mockVentureDNA.type}</div>
-                    <p className="text-sm text-white/80 mt-1">
+                    <div className="text-sm text-neutral-400 mb-1 font-mono">Entrepreneur Type</div>
+                    <div className="text-2xl font-bold text-white">{mockVentureDNA.type}</div>
+                    <p className="text-sm text-neutral-300 mt-1">
                       Designs systems, processes, frameworks. Obsessed with how pieces fit together.
                     </p>
                   </div>
                 </div>
-
-                {/* Gates Grid */}
+              </div>
+              
+              {/* Content - White */}
+              <CardContent className="p-8">
                 <div className="grid md:grid-cols-3 gap-6">
                   {/* Non-negotiables */}
                   <div>
-                    <h4 className="text-sm font-mono text-white/70 mb-4 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" />
+                    <h4 className="text-sm font-medium text-neutral-500 mb-4 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
                       Non-Negotiables
                     </h4>
                     <div className="space-y-3">
                       {mockVentureDNA.nonNegotiables.map((gate) => (
                         <div
                           key={gate.name}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-white/10 backdrop-blur-sm"
+                          className="flex items-center gap-3 p-3 rounded-lg bg-neutral-100"
                         >
-                          <gate.icon className="w-4 h-4 text-white" />
-                          <span className="text-sm">{gate.name}</span>
+                          <gate.icon className="w-4 h-4 text-neutral-600" />
+                          <span className="text-sm text-neutral-700">{gate.name}</span>
                         </div>
                       ))}
                     </div>
@@ -493,18 +454,18 @@ export default function Home() {
 
                   {/* Accelerators */}
                   <div>
-                    <h4 className="text-sm font-mono text-white/70 mb-4 flex items-center gap-2">
-                      <Zap className="w-4 h-4" />
+                    <h4 className="text-sm font-medium text-neutral-500 mb-4 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-green-500" />
                       Accelerators
                     </h4>
                     <div className="space-y-3">
                       {mockVentureDNA.accelerators.map((gate) => (
                         <div
                           key={gate.name}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-white/10 backdrop-blur-sm"
+                          className="flex items-center gap-3 p-3 rounded-lg bg-neutral-100"
                         >
-                          <gate.icon className="w-4 h-4 text-white" />
-                          <span className="text-sm">{gate.name}</span>
+                          <gate.icon className="w-4 h-4 text-neutral-600" />
+                          <span className="text-sm text-neutral-700">{gate.name}</span>
                         </div>
                       ))}
                     </div>
@@ -512,18 +473,18 @@ export default function Home() {
 
                   {/* Red Flags */}
                   <div>
-                    <h4 className="text-sm font-mono text-white/70 mb-4 flex items-center gap-2">
-                      <XCircle className="w-4 h-4" />
+                    <h4 className="text-sm font-medium text-neutral-500 mb-4 flex items-center gap-2">
+                      <XCircle className="w-4 h-4 text-red-500" />
                       Red Flags
                     </h4>
                     <div className="space-y-3">
                       {mockVentureDNA.redFlags.map((gate) => (
                         <div
                           key={gate.name}
-                          className="flex items-center gap-3 p-3 rounded-lg bg-white/10 backdrop-blur-sm"
+                          className="flex items-center gap-3 p-3 rounded-lg bg-neutral-100"
                         >
-                          <gate.icon className="w-4 h-4 text-white" />
-                          <span className="text-sm">{gate.name}</span>
+                          <gate.icon className="w-4 h-4 text-neutral-600" />
+                          <span className="text-sm text-neutral-700">{gate.name}</span>
                         </div>
                       ))}
                     </div>
@@ -531,11 +492,11 @@ export default function Home() {
                 </div>
 
                 {/* CTA */}
-                <div className="mt-8 pt-8 border-t border-white/20 flex items-center justify-between">
-                  <div className="text-sm text-white/70 font-mono">
+                <div className="mt-8 pt-8 border-t border-neutral-200 flex items-center justify-between">
+                  <div className="text-sm text-neutral-500">
                     Share your Venture DNA on LinkedIn or Twitter
                   </div>
-                  <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                  <Button variant="outline" className="border-neutral-300 hover:bg-neutral-100">
                     Share My DNA
                   </Button>
                 </div>
@@ -545,7 +506,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section 6: The Gate System */}
+      {/* Section 6: The Gate System - MIX de cards blancas y oscuras */}
       <section id="gates" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -555,10 +516,10 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <Badge className="bg-white/80 text-neutral-600 border-neutral-200 mb-4 font-mono">
+            <Badge className="bg-white/80 text-neutral-600 border-neutral-200 mb-4">
               The System
             </Badge>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold mb-4 text-neutral-900">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-neutral-900">
               It&apos;s Not Intuition. It&apos;s a System.
             </h2>
             <p className="text-neutral-600 max-w-2xl mx-auto">
@@ -567,10 +528,10 @@ export default function Home() {
             </p>
           </motion.div>
 
-          {/* Market Gates - Colorful Cards */}
+          {/* Market Gates - Dark cards */}
           <div className="mb-12">
-            <h3 className="text-xl font-serif font-semibold mb-6 flex items-center gap-2 text-neutral-900">
-              <Globe className="w-5 h-5 text-violet-500" />
+            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2 text-neutral-900">
+              <Globe className="w-5 h-5 text-indigo-500" />
               12 Market Gates
             </h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -582,14 +543,14 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: index * 0.03 }}
                 >
-                  <Card className="bg-white border-neutral-200 hover:border-violet-300 transition-colors group hover:shadow-md">
+                  <Card className="card-dark border-neutral-800 hover:border-neutral-700 transition-colors">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center flex-shrink-0">
-                          <gate.icon className="w-4 h-4 text-violet-600" />
+                        <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                          <gate.icon className="w-4 h-4 text-neutral-300" />
                         </div>
                         <div>
-                          <h4 className="font-serif font-medium text-sm mb-1 text-neutral-900">{gate.name}</h4>
+                          <h4 className="font-medium text-sm mb-1 text-white">{gate.name}</h4>
                           <p className="text-xs text-neutral-500">{gate.desc}</p>
                         </div>
                       </div>
@@ -600,10 +561,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Personal Gates - Different Color */}
+          {/* Personal Gates - White cards con acento */}
           <div>
-            <h3 className="text-xl font-serif font-semibold mb-6 flex items-center gap-2 text-neutral-900">
-              <Users className="w-5 h-5 text-cyan-500" />
+            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2 text-neutral-900">
+              <Users className="w-5 h-5 text-indigo-500" />
               11 Personal Gates
             </h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -615,14 +576,14 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: index * 0.03 }}
                 >
-                  <Card className="bg-white border-neutral-200 hover:border-cyan-300 transition-colors group hover:shadow-md">
+                  <Card className="bg-white border-neutral-200 hover:border-indigo-300 transition-colors hover:shadow-md">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center flex-shrink-0">
-                          <gate.icon className="w-4 h-4 text-cyan-600" />
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                          <gate.icon className="w-4 h-4 text-indigo-600" />
                         </div>
                         <div>
-                          <h4 className="font-serif font-medium text-sm mb-1 text-neutral-900">{gate.name}</h4>
+                          <h4 className="font-medium text-sm mb-1 text-neutral-900">{gate.name}</h4>
                           <p className="text-xs text-neutral-500">{gate.desc}</p>
                         </div>
                       </div>
@@ -635,7 +596,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section 7: CTA Final - Sunset Gradient */}
+      {/* Section 7: CTA Final - Dark card con acento */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -644,20 +605,20 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="gradient-card-sunset border-0 overflow-hidden">
+            <Card className="card-dark border-0 overflow-hidden">
               <CardContent className="p-12 text-center">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold mb-6 text-neutral-800">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-white">
                   Ready to discover which venture{" "}
-                  <span className="italic">fits you?</span>
+                  <span className="gradient-text">fits you?</span>
                 </h2>
-                <p className="text-neutral-700 mb-10 max-w-2xl mx-auto">
+                <p className="text-neutral-400 mb-10 max-w-2xl mx-auto">
                   Join founders who are building ventures aligned with who they are — not just what the
                   market says is hot.
                 </p>
                 <Link href="/discover">
                   <Button
                     size="lg"
-                    className="bg-neutral-900 hover:bg-neutral-800 text-white border-0 px-10 py-6 text-lg font-medium"
+                    className="bg-white hover:bg-neutral-100 text-neutral-900 border-0 px-10 py-6 text-lg font-medium"
                   >
                     Start Free
                     <ArrowRight className="ml-2 w-5 h-5" />
@@ -670,15 +631,15 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-neutral-200 bg-white/50">
+      <footer className="py-12 border-t border-neutral-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center">
                   <Diamond className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-serif font-bold text-lg text-neutral-900">VentureGates</span>
+                <span className="font-bold text-lg text-neutral-900">VentureGates</span>
               </div>
               <div className="h-6 w-px bg-neutral-300" />
               <Image
@@ -689,7 +650,7 @@ export default function Home() {
                 className="h-6 w-auto opacity-60"
               />
             </div>
-            <div className="flex items-center gap-6 text-sm text-neutral-500 font-mono">
+            <div className="flex items-center gap-6 text-sm text-neutral-500">
               <Link href="/" className="hover:text-neutral-900 transition-colors">
                 Home
               </Link>
@@ -704,7 +665,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-neutral-200 text-center text-sm text-neutral-400 font-mono">
+          <div className="mt-8 pt-8 border-t border-neutral-200 text-center text-sm text-neutral-400">
             Powered by AI · Built by The Agile Monkeys · © 2025
           </div>
         </div>

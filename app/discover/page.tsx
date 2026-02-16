@@ -14,10 +14,10 @@ export default function DiscoverPage() {
         transition={{ duration: 0.5 }}
         className="text-center px-4"
       >
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 flex items-center justify-center mx-auto mb-6">
-          <Clock className="w-10 h-10 text-violet-600" />
+        <div className="w-20 h-20 rounded-2xl bg-neutral-900 flex items-center justify-center mx-auto mb-6">
+          <Clock className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-4 text-neutral-900">Coming Soon</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4 text-neutral-900">Coming Soon</h1>
         <p className="text-neutral-600 max-w-md mx-auto mb-8">
           The Venture DNA discovery flow is being built. Soon you&apos;ll be able to answer questions
           about your entrepreneurial profile and get personalized venture recommendations.
