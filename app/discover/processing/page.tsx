@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   Loader2,
   Brain,
@@ -26,6 +27,7 @@ export default function ProcessingPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
     const generateVentureDNA = async () => {
@@ -48,57 +50,80 @@ export default function ProcessingPage() {
             }
             return prev + 1;
           });
-        }, 1500);
+        }, 1200);
 
-        // Call API with metadata
+        // Call API
         const response = await fetch("/api/generate-venture-dna", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            answers,
-            ip_address: "", // Will be captured server-side or left empty
-            user_agent: navigator.userAgent,
-          }),
+          body: JSON.stringify({ answers }),
         });
 
+        clearInterval(stepInterval);
+
         if (!response.ok) {
-          throw new Error("Failed to generate venture DNA");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Server error: ${response.status}`);
         }
 
         const data = await response.json();
 
-        // Store result with Supabase IDs
+        // Validate response data
+        if (!data.venture_dna || !data.ventures || !Array.isArray(data.ventures)) {
+          throw new Error("Invalid response from server");
+        }
+
+        // Store result
         localStorage.setItem("ventureGates_result", JSON.stringify(data));
         
-        // If we have a share slug, redirect to profile page
-        if (data.share_slug) {
-          router.push(`/profile/${data.share_slug}`);
-        } else {
-          router.push("/discover/results");
-        }
+        // Navigate to results
+        router.push("/discover/results");
+
       } catch (err) {
+        console.error("Error generating DNA:", err);
         setError(err instanceof Error ? err.message : "Something went wrong");
       }
     };
 
     generateVentureDNA();
-  }, [router]);
+  }, [router, isRetrying]);
+
+  const handleRetry = () => {
+    setError(null);
+    setCurrentStep(0);
+    setIsRetrying(!isRetrying); // Toggle to trigger useEffect
+  };
+
+  const handleStartOver = () => {
+    localStorage.removeItem("ventureGates_answers");
+    localStorage.removeItem("ventureGates_result");
+    router.push("/discover");
+  };
 
   if (error) {
     return (
       <main className="min-h-screen dot-pattern-bg flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="w-20 h-20 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-6">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-6">
             <span className="text-3xl">😕</span>
           </div>
-          <h1 className="text-2xl font-bold text-neutral-900 mb-4">Something went wrong</h1>
+          <h1 className="text-2xl font-bold text-neutral-900 mb-4">Oops, something went wrong</h1>
           <p className="text-neutral-600 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800"
-          >
-            Try Again
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              onClick={handleRetry}
+              className="bg-neutral-900 hover:bg-neutral-800 text-white"
+            >
+              Try Again
+            </Button>
+            <Button
+              onClick={handleStartOver}
+              variant="outline"
+              className="border-neutral-300 hover:bg-white"
+            >
+              Start Over
+            </Button>
+          </div>
         </div>
       </main>
     );

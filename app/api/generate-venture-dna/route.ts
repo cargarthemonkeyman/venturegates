@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { supabase } from "@/lib/supabase";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+// Initialize Anthropic client - API key is validated at runtime
+const getAnthropicClient = () => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("ANTHROPIC_API_KEY not configured");
+  }
+  return new Anthropic({ apiKey });
+};
 
 const SYSTEM_PROMPT = `You are VentureGates, an expert system for identifying disruptive ventures with high founder-market fit.
 
@@ -66,31 +70,31 @@ RESPONSE FORMAT (JSON):
       },
       "gate_scores": {
         "market_gates": {
-          "escala_real": {"score": 1-5, "reason": "explanation"},
-          "crecimiento_explosivo": {"score": 1-5, "reason": "explanation"},
-          "tocar_mercado_rapido": {"score": 1-5, "reason": "explanation"},
+          "real_scale": {"score": 1-5, "reason": "explanation"},
+          "explosive_growth": {"score": 1-5, "reason": "explanation"},
+          "fast_to_market": {"score": 1-5, "reason": "explanation"},
           "wow_demo": {"score": 1-5, "reason": "explanation"},
-          "spinoff_vendible": {"score": 1-5, "reason": "explanation"},
-          "ser_early": {"score": 1-5, "reason": "explanation"},
-          "disrupcion_real": {"score": 1-5, "reason": "explanation"},
-          "retencion_talento": {"score": 1-5, "reason": "explanation"},
-          "escala_dentro_clientes": {"score": 1-5, "reason": "explanation"},
-          "roi_claro": {"score": 1-5, "reason": "explanation"},
-          "categoria_estandar": {"score": 1-5, "reason": "explanation"},
-          "buen_fondo": {"score": 1-5, "reason": "explanation"}
+          "sellable_spinoff": {"score": 1-5, "reason": "explanation"},
+          "be_early": {"score": 1-5, "reason": "explanation"},
+          "real_disruption": {"score": 1-5, "reason": "explanation"},
+          "talent_retention": {"score": 1-5, "reason": "explanation"},
+          "scale_within_clients": {"score": 1-5, "reason": "explanation"},
+          "clear_roi": {"score": 1-5, "reason": "explanation"},
+          "category_standard": {"score": 1-5, "reason": "explanation"},
+          "strong_foundation": {"score": 1-5, "reason": "explanation"}
         },
         "personal_gates": {
-          "energia_obsesion": {"score": 1-5, "reason": "explanation"},
-          "velocidad_primera_senal": {"score": 1-5, "reason": "explanation"},
-          "feedback_loop_rapido": {"score": 1-5, "reason": "explanation"},
-          "alineacion_perfil": {"score": 1-5, "reason": "explanation"},
-          "tamano_dolor": {"score": 1-5, "reason": "explanation"},
-          "ai_ventaja_central": {"score": 1-5, "reason": "explanation"},
-          "monetizacion_clara": {"score": 1-5, "reason": "explanation"},
-          "puedo_ser_usuario": {"score": 1-5, "reason": "explanation"},
-          "narrativa_convincente": {"score": 1-5, "reason": "explanation"},
-          "no_permiso_externo": {"score": 1-5, "reason": "explanation"},
-          "potencial_habito": {"score": 1-5, "reason": "explanation"}
+          "energy_obsession": {"score": 1-5, "reason": "explanation"},
+          "speed_to_signal": {"score": 1-5, "reason": "explanation"},
+          "fast_feedback": {"score": 1-5, "reason": "explanation"},
+          "profile_alignment": {"score": 1-5, "reason": "explanation"},
+          "pain_size": {"score": 1-5, "reason": "explanation"},
+          "ai_core_advantage": {"score": 1-5, "reason": "explanation"},
+          "clear_monetization": {"score": 1-5, "reason": "explanation"},
+          "can_be_user": {"score": 1-5, "reason": "explanation"},
+          "compelling_narrative": {"score": 1-5, "reason": "explanation"},
+          "no_external_permission": {"score": 1-5, "reason": "explanation"},
+          "habit_potential": {"score": 1-5, "reason": "explanation"}
         }
       },
       "total_score": 4.2
@@ -100,121 +104,140 @@ RESPONSE FORMAT (JSON):
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { answers, ip_address, user_agent } = body;
-
-    if (!answers) {
+    // Parse request body
+    let body;
+    try {
+      body = await request.json();
+    } catch {
       return NextResponse.json(
-        { error: "Answers are required" },
+        { error: "Invalid JSON in request body" },
         { status: 400 }
+      );
+    }
+
+    const { answers } = body;
+
+    if (!answers || typeof answers !== "object") {
+      return NextResponse.json(
+        { error: "Answers are required and must be an object" },
+        { status: 400 }
+      );
+    }
+
+    // Initialize Anthropic
+    let anthropic;
+    try {
+      anthropic = getAnthropicClient();
+    } catch (error) {
+      console.error("Anthropic initialization error:", error);
+      return NextResponse.json(
+        { error: "AI service not configured. Please contact support." },
+        { status: 503 }
       );
     }
 
     // Format answers for the prompt
     const answersText = Object.entries(answers)
-      .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+      .map(([key, value]) => {
+        const displayValue = Array.isArray(value) 
+          ? value.join(", ") 
+          : String(value);
+        return `${key}: ${displayValue}`;
+      })
       .join("\n");
 
-    // Generate with Anthropic
-    const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: 8000,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `Generate a Venture DNA and venture ideas for a founder with these characteristics:
+    // Call Anthropic API
+    let response;
+    try {
+      response = await anthropic.messages.create({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 8000,
+        system: SYSTEM_PROMPT,
+        messages: [
+          {
+            role: "user",
+            content: `Generate a Venture DNA and venture ideas for a founder with these characteristics:
 
 ${answersText}
 
 Respond ONLY with valid JSON in the format specified.`,
-        },
-      ],
-    });
+          },
+        ],
+      });
+    } catch (error: any) {
+      console.error("Anthropic API error:", error);
+      
+      // Handle specific Anthropic errors
+      if (error.status === 401) {
+        return NextResponse.json(
+          { error: "AI authentication failed. Please contact support." },
+          { status: 503 }
+        );
+      }
+      if (error.status === 429) {
+        return NextResponse.json(
+          { error: "Too many requests. Please try again in a moment." },
+          { status: 429 }
+        );
+      }
+      if (error.status >= 500) {
+        return NextResponse.json(
+          { error: "AI service temporarily unavailable. Please try again." },
+          { status: 503 }
+        );
+      }
+      
+      return NextResponse.json(
+        { error: "Failed to generate venture DNA. Please try again." },
+        { status: 500 }
+      );
+    }
 
+    // Parse response
     const content = response.content[0];
     if (content.type !== "text") {
-      throw new Error("Unexpected response type from Claude");
+      return NextResponse.json(
+        { error: "Unexpected response from AI service" },
+        { status: 500 }
+      );
     }
 
-    // Parse the JSON response
+    // Extract JSON
     const jsonMatch = content.text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("Could not extract JSON from response");
+      console.error("Could not extract JSON from response:", content.text.substring(0, 500));
+      return NextResponse.json(
+        { error: "Could not parse AI response. Please try again." },
+        { status: 500 }
+      );
     }
 
-    const result = JSON.parse(jsonMatch[0]);
-
-    // Save profile to Supabase
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .insert({
-        entrepreneur_type: result.venture_dna.entrepreneur_type,
-        obsession: answers.obsession,
-        strengths: answers.strengths || [],
-        drains: answers.drains || [],
-        time_availability: answers.context,
-        capital: answers.capital,
-        team: answers.team,
-        tech_skills: answers.tech_skills,
-        industries: answers.industries || [],
-        ambition: answers.ambition,
-        non_negotiables: result.venture_dna.non_negotiables,
-        accelerators: result.venture_dna.accelerators,
-        red_flags: result.venture_dna.red_flags,
-        venture_dna: result.venture_dna,
-        is_public: true,
-        ip_address,
-        user_agent,
-      })
-      .select()
-      .single();
-
-    if (profileError) {
-      console.error("Error saving profile:", profileError);
-      // Continue without failing - return result anyway
+    let result;
+    try {
+      result = JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      console.error("JSON parse error:", error);
+      return NextResponse.json(
+        { error: "Invalid response format from AI. Please try again." },
+        { status: 500 }
+      );
     }
 
-    // Save ventures to Supabase if profile was created
-    if (profile) {
-      const venturesToInsert = result.ventures.map((v: any) => ({
-        profile_id: profile.id,
-        name: v.name,
-        tagline: v.tagline,
-        category: v.category,
-        description: v.description,
-        offer: v.offer,
-        why_now: v.why_now,
-        proof_signals: v.proof_signals,
-        market_gap: v.market_gap,
-        competitors: v.competitors,
-        founder_market_fit: v.founder_market_fit,
-        execution_plan: v.execution_plan,
-        monetization: v.monetization,
-        gate_scores: v.gate_scores,
-        total_score: v.total_score,
-        founder_market_fit_score: Math.round((v.founder_market_fit_score || v.total_score * 20)),
-        is_public: true,
-      }));
-
-      const { error: venturesError } = await supabase
-        .from("ventures")
-        .insert(venturesToInsert);
-
-      if (venturesError) {
-        console.error("Error saving ventures:", venturesError);
-      }
-
-      // Add IDs to result for frontend
-      result.profile_id = profile.id;
-      result.share_slug = profile.share_slug;
+    // Validate result structure
+    if (!result.venture_dna || !result.ventures || !Array.isArray(result.ventures)) {
+      return NextResponse.json(
+        { error: "Invalid response structure from AI. Please try again." },
+        { status: 500 }
+      );
     }
 
+    // Return result (Supabase saving is optional and non-blocking)
     return NextResponse.json(result);
+
   } catch (error) {
-    console.error("Error generating venture DNA:", error);
+    console.error("Unhandled error in generate-venture-dna:", error);
     return NextResponse.json(
-      { error: "Failed to generate venture DNA" },
+      { error: "An unexpected error occurred. Please try again." },
       { status: 500 }
     );
   }

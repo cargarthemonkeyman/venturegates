@@ -10,24 +10,27 @@ import {
   Zap,
   AlertTriangle,
   XCircle,
-  Users,
-  CheckCircle2,
   ArrowRight,
-  ArrowLeft,
-  Share2,
-  Sparkles,
   Target,
   TrendingUp,
+  Share2,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+interface Gate {
+  name: string;
+  description: string;
+  icon?: string;
+}
+
 interface VentureDNA {
   entrepreneur_type: string;
   type_description: string;
-  non_negotiables: Array<{ name: string; description: string; icon?: string }>;
-  accelerators: Array<{ name: string; description: string; icon?: string }>;
-  red_flags: Array<{ name: string; description: string; icon?: string }>;
+  non_negotiables: Gate[];
+  accelerators: Gate[];
+  red_flags: Gate[];
 }
 
 interface Venture {
@@ -42,28 +45,65 @@ interface Venture {
 interface ResultData {
   venture_dna: VentureDNA;
   ventures: Venture[];
+  profile_id?: string;
+  share_slug?: string;
 }
 
 export default function ResultsPage() {
   const router = useRouter();
   const [data, setData] = useState<ResultData | null>(null);
   const [activeTab, setActiveTab] = useState<"dna" | "ventures">("dna");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const resultJson = localStorage.getItem("ventureGates_result");
-    if (!resultJson) {
-      router.push("/discover");
-      return;
-    }
-    setData(JSON.parse(resultJson));
+    const loadData = () => {
+      try {
+        const resultJson = localStorage.getItem("ventureGates_result");
+        if (!resultJson) {
+          // Try to check if we have answers but no result - redirect to processing
+          const answersJson = localStorage.getItem("ventureGates_answers");
+          if (answersJson) {
+            router.push("/discover/processing");
+            return;
+          }
+          // No data at all - redirect to discover
+          router.push("/discover");
+          return;
+        }
+
+        const parsedData = JSON.parse(resultJson);
+        
+        // Validate data structure
+        if (!parsedData.venture_dna || !parsedData.ventures) {
+          console.error("Invalid data structure:", parsedData);
+          localStorage.removeItem("ventureGates_result");
+          router.push("/discover");
+          return;
+        }
+
+        setData(parsedData);
+      } catch (error) {
+        console.error("Error loading results:", error);
+        localStorage.removeItem("ventureGates_result");
+        router.push("/discover");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, [router]);
 
-  if (!data) {
+  if (isLoading) {
     return (
       <main className="min-h-screen dot-pattern-bg flex items-center justify-center">
         <div className="animate-pulse text-neutral-500">Loading...</div>
       </main>
     );
+  }
+
+  if (!data) {
+    return null; // Will redirect
   }
 
   const { venture_dna, ventures } = data;
@@ -77,8 +117,7 @@ export default function ResultsPage() {
             href="/"
             className="text-sm text-neutral-500 hover:text-neutral-900 mb-4 inline-flex items-center gap-1"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to home
+            ← Back to home
           </Link>
           <h1 className="text-4xl font-bold text-neutral-900 mb-4">
             Your Venture DNA
@@ -127,7 +166,7 @@ export default function ResultsPage() {
                     <Brain className="w-8 h-8 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm text-neutral-400 mb-1">Entrepreneur Type</div>
+                    <div className="text-sm text-neutral-400 mb-1">Founder Type</div>
                     <div className="text-3xl font-bold text-white">
                       {venture_dna.entrepreneur_type}
                     </div>
@@ -149,7 +188,7 @@ export default function ResultsPage() {
                     Non-Negotiables
                   </h3>
                   <div className="space-y-3">
-                    {venture_dna.non_negotiables.map((gate, i) => (
+                    {venture_dna.non_negotiables?.map((gate, i) => (
                       <div key={i} className="p-3 rounded-lg bg-neutral-100">
                         <div className="font-medium text-neutral-900">{gate.name}</div>
                         <div className="text-sm text-neutral-500">{gate.description}</div>
@@ -167,7 +206,7 @@ export default function ResultsPage() {
                     Accelerators
                   </h3>
                   <div className="space-y-3">
-                    {venture_dna.accelerators.map((gate, i) => (
+                    {venture_dna.accelerators?.map((gate, i) => (
                       <div key={i} className="p-3 rounded-lg bg-neutral-100">
                         <div className="font-medium text-neutral-900">{gate.name}</div>
                         <div className="text-sm text-neutral-500">{gate.description}</div>
@@ -185,7 +224,7 @@ export default function ResultsPage() {
                     Red Flags
                   </h3>
                   <div className="space-y-3">
-                    {venture_dna.red_flags.map((gate, i) => (
+                    {venture_dna.red_flags?.map((gate, i) => (
                       <div key={i} className="p-3 rounded-lg bg-neutral-100">
                         <div className="font-medium text-neutral-900">{gate.name}</div>
                         <div className="text-sm text-neutral-500">{gate.description}</div>
@@ -222,7 +261,7 @@ export default function ResultsPage() {
                     </Badge>
                     <div className="flex items-center gap-1 text-sm font-medium text-neutral-900">
                       <Target className="w-4 h-4" />
-                      {venture.total_score.toFixed(1)}/5
+                      {venture.total_score?.toFixed(1)}/5
                     </div>
                   </div>
 
