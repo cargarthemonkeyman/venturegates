@@ -5,27 +5,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Brain,
-  Sparkles,
-  BarChart3,
-  Users,
-  Zap,
   ArrowRight,
   ArrowLeft,
   Loader2,
-  Search,
   Compass,
   Flame,
   Heart,
   Scale,
   Lightbulb,
   Target,
-  Shield,
-  PartyPopper,
   CircleDot,
+  Clock,
+  Briefcase,
+  TrendingUp,
+  Palette,
+  Code,
+  Building2,
+  Search,
+  Shield,
   Crown,
+  BarChart3,
+  Users,
+  Zap,
+  Brain,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,216 +44,251 @@ interface Option {
 
 interface Question {
   id: string;
-  type: "single" | "multi" | "single-with-other" | "multi-with-other";
+  type: "single" | "multi" | "single-with-other" | "multi-with-other" | "text";
   title: string;
+  subtitle?: string;
   description?: string;
-  options: Option[];
+  options?: Option[];
   placeholder?: string;
   otherPlaceholder?: string;
   maxSelections?: number;
 }
 
+// FLUJO ORGÁNICO: Estudio completo del fundador
+// Intercalado: Psicológico → Práctico → Psicológico → Práctico → Conclusión
 const questions: Question[] = [
-  // === PERSONALIDAD / ENEAGRAMA (Nuevas) ===
+  // === APERTURA: IDENTIDAD FUNDAMENTAL ===
+  {
+    id: "entrepreneur_archetype",
+    type: "single-with-other",
+    title: "¿Qué arquetipo te describe mejor?",
+    subtitle: "Tu naturaleza fundamental",
+    description: "No lo que haces, sino quién eres cuando estás en tu elemento",
+    options: [
+      { value: "visionary", label: "El Visionario", icon: Lightbulb, description: "Veo el futuro antes que otros. Me obsesionan las posibilidades, no las limitaciones." },
+      { value: "craftsman", label: "El Artesano", icon: Palette, description: "Me pierdo perfeccionando detalles. La calidad es mi religión." },
+      { value: "strategist", label: "El Estratega", icon: Compass, description: "Veo patrones donde otros ven caos. El ajedrez es mi lenguaje." },
+      { value: "catalyst", label: "El Catalizador", icon: Flame, description: "Muevo a la gente. Las conversaciones conmigo cambian trayectorias." },
+      { value: "architect", label: "El Arquitecto", icon: Building2, description: "Construyo sistemas que sobreviven sin mí. Estructura sobre todo." },
+      { value: "hacker", label: "El Hacker", icon: Code, description: "Encuentro atajos que otros no ven. 'Imposible' es un desafío." },
+    ],
+    otherPlaceholder: "Describe tu arquetipo único en tus palabras...",
+  },
+  
+  // === PROFUNDIDAD: ENEAGRAMA ===
   {
     id: "eneagrama",
     type: "single-with-other",
-    title: "¿Cuál es tu tipo de personalidad (Eneagrama)?",
-    description: "Selecciona el número que mejor te describe, o 'Otro' si prefieres especificar",
+    title: "Tu motor interno (Eneagrama)",
+    subtitle: "¿Qué te mueve en el fondo?",
+    description: "Selecciona el que resuene más profundamente contigo",
     options: [
-      { value: "1", label: "Tipo 1 - El Reformador", icon: Scale, description: "Perfeccionista, ético, busca lo correcto" },
-      { value: "2", label: "Tipo 2 - El Ayudador", icon: Heart, description: "Cariñoso, generoso, orientado a personas" },
-      { value: "3", label: "Tipo 3 - El Triunfador", icon: Crown, description: "Adaptable, exitoso, orientado a resultados" },
-      { value: "4", label: "Tipo 4 - El Individualista", icon: Sparkles, description: "Expresivo, creativo, busca autenticidad" },
-      { value: "5", label: "Tipo 5 - El Investigador", icon: Search, description: "Intensivo, innovador, aislado" },
-      { value: "6", label: "Tipo 6 - El Leal", icon: Shield, description: "Comprometido, responsable, orientado a seguridad" },
-      { value: "7", label: "Tipo 7 - El Entusiasta", icon: PartyPopper, description: "Versátil, espontáneo, busca experiencias" },
-      { value: "8", label: "Tipo 8 - El Desafiador", icon: Flame, description: "Autoconfiable, decisivo, orientado a control" },
-      { value: "9", label: "Tipo 9 - El Pacificador", icon: CircleDot, description: "Receptivo, reconfortante, busca armonía" },
+      { value: "1", label: "El Reformador", icon: Scale, description: "Busco lo correcto. El mundo debería funcionar mejor." },
+      { value: "3", label: "El Triunfador", icon: Crown, description: "Necesito ser reconocido. El éxito es mi combustible." },
+      { value: "5", label: "El Investigador", icon: Search, description: "Entiendo antes de actuar. El conocimiento es poder." },
+      { value: "7", label: "El Entusiasta", icon: Brain, description: "Exploro posibilidades. La rutina me asfixia." },
+      { value: "8", label: "El Desafiador", icon: Flame, description: "Controlo mi destino. La debilidad no es opción." },
+      { value: "9", label: "El Pacificador", icon: CircleDot, description: "Busco armonía. El conflicto me agota." },
     ],
-    otherPlaceholder: "Describe tu personalidad en tus propias palabras...",
-  },
-  {
-    id: "estres_reaccion",
-    type: "single-with-other",
-    title: "¿Cómo reaccionas ante el estrés?",
-    description: "Esto nos ayuda a entender qué tipo de ventures evitar para ti",
-    options: [
-      { value: "analizo", label: "Analizo y planifico", icon: Brain, description: "Me paralizo pensando demasiado" },
-      { value: "actuo", label: "Actúo rápido", icon: Zap, description: "Tomo decisiones impulsivas bajo presión" },
-      { value: "delego", label: "Busco ayuda", icon: Users, description: "Necesito hablarlo con alguien" },
-      { value: "evito", label: "Evito el conflicto", icon: CircleDot, description: "Me retraigo hasta que pasa" },
-      { value: "compito", label: "Compito más", icon: Target, description: "El estrés me motiva a ganar" },
-    ],
-    otherPlaceholder: "¿Cómo manejas el estrés de otra forma?",
-  },
-  {
-    id: "motivacion_profunda",
-    type: "single-with-other",
-    title: "¿Qué te mueve realmente?",
-    description: "La motivación que te hace levantarte a las 5am sin despertador",
-    options: [
-      { value: "libertad", label: "Libertad total", icon: Compass, description: "No tener jefes ni horarios" },
-      { value: "reconocimiento", label: "Reconocimiento", icon: Crown, description: "Ser visto como el mejor en algo" },
-      { value: "impacto", label: "Cambiar el mundo", icon: Heart, description: "Dejar un legado positivo" },
-      { value: "creacion", label: "Crear algo grande", icon: Lightbulb, description: "Construir desde cero" },
-      { value: "riqueza", label: "Riqueza", icon: BarChart3, description: "Generar abundancia económica" },
-      { value: "maestria", label: "Maestría", icon: Target, description: "Ser el mejor en lo que hago" },
-    ],
-    otherPlaceholder: "¿Qué otra motivación profunda tienes?",
+    otherPlaceholder: "Describe tu motor interno de otra forma...",
   },
   
-  // === PERFIL EMPRENDEDOR ===
+  // === PRÁCTICO: CONTEXTO ACTUAL ===
   {
-    id: "entrepreneur_type",
+    id: "reality_check",
     type: "single-with-other",
-    title: "What type of entrepreneur are you?",
-    description: "Select the description that fits you best, or describe your own style",
+    title: "Tu realidad actual",
+    subtitle: "Sin filtros",
+    description: "¿Dónde estás ahora mismo?",
     options: [
-      { value: "architect", label: "The Architect", icon: Brain, description: "Designs systems, processes, frameworks. Obsessed with how pieces fit together." },
-      { value: "creative", label: "The Creative", icon: Sparkles, description: "Designs products, experiences, brands. Obsessed with making things feel incredible." },
-      { value: "analyst", label: "The Analyst", icon: BarChart3, description: "Data, metrics, optimization. Obsessed with finding patterns." },
-      { value: "communicator", label: "The Communicator", icon: Users, description: "Narrative, sales, community. Obsessed with connecting with people." },
-      { value: "builder", label: "The Builder", icon: Zap, description: "Code, infrastructure, making things work. Obsessed with building." },
-    ],
-    otherPlaceholder: "Describe tu estilo emprendedor único...",
-  },
-  {
-    id: "obsession",
-    type: "single-with-other",
-    title: "What topic do you research without being asked?",
-    description: "In your free time, before bed... what do you explore?",
-    options: [
-      { value: "ai_tech", label: "IA y tecnología", icon: Brain, description: "Nuevos modelos, herramientas, posibilidades" },
-      { value: "consumer_behavior", label: "Comportamiento del consumidor", icon: Users, description: "Por qué la gente compra lo que compra" },
-      { value: "market_trends", label: "Tendencias de mercado", icon: BarChart3, description: "Lo que viene, oportunidades emergentes" },
-      { value: "product_design", label: "Diseño de producto", icon: Sparkles, description: "Cómo hacer cosas que la gente ame" },
-      { value: "business_models", label: "Modelos de negocio", icon: Target, description: "Cómo monetizar diferentes ideas" },
-    ],
-    otherPlaceholder: "¿Qué otro tema te obsesiona investigar?",
-  },
-  {
-    id: "strengths",
-    type: "multi-with-other",
-    title: "Select your top 3 strengths",
-    description: "Where do you excel the most? Choose up to 3, or add your own",
-    maxSelections: 3,
-    options: [
-      { value: "systemic_thinking", label: "Systemic thinking" },
-      { value: "product_design", label: "Product design" },
-      { value: "storytelling", label: "Storytelling & narrative" },
-      { value: "programming", label: "Programming" },
-      { value: "sales", label: "Sales & negotiation" },
-      { value: "data_analysis", label: "Data analysis" },
-      { value: "marketing", label: "Marketing digital" },
-      { value: "ux_ui", label: "UX/UI" },
-      { value: "operations", label: "Operations" },
-      { value: "networking", label: "Networking & relationships" },
-      { value: "leadership", label: "Leadership" },
-      { value: "creativity", label: "Creativity & ideation" },
-    ],
-    otherPlaceholder: "¿Otra fortaleza que tengas?",
-  },
-  {
-    id: "drains",
-    type: "multi-with-other",
-    title: "What drains your energy?",
-    description: "What do you NOT want to do in your venture? Choose up to 3",
-    maxSelections: 3,
-    options: [
-      { value: "bureaucracy", label: "Bureaucratic management" },
-      { value: "support", label: "Technical support" },
-      { value: "cold_calls", label: "Cold sales calls" },
-      { value: "content", label: "Repetitive content creation" },
-      { value: "regulation", label: "Regulation & compliance" },
-      { value: "inventory", label: "Inventory management" },
-      { value: "customer_service", label: "Customer service" },
-      { value: "hardware", label: "Hardware/logistics" },
-      { value: "accounting", label: "Accounting" },
-      { value: "negotiations", label: "Long negotiations" },
-    ],
-    otherPlaceholder: "¿Qué otra cosa te drena energía?",
-  },
-  
-  // === CONTEXTO ===
-  {
-    id: "context",
-    type: "single-with-other",
-    title: "What's your current situation?",
-    options: [
-      { value: "full_time", label: "Full-time available" },
-      { value: "nights_weekends", label: "Nights and weekends" },
-      { value: "few_hours", label: "Few hours per week" },
+      { value: "full_time_ready", label: "100% disponible", icon: Clock, description: "Puedo dedicarme en cuerpo y alma" },
+      { value: "side_hustle", label: "Proyecto paralelo", icon: Briefcase, description: "Tengo trabajo pero puedo dedicar 20h/semana" },
+      { value: "limited_time", label: "Tiempo limitado", icon: Clock, description: "Menos de 10h semanaales disponibles" },
+      { value: "transitioning", label: "En transición", icon: TrendingUp, description: "Dejando mi trabajo, ventana de 1-3 meses" },
     ],
     otherPlaceholder: "Describe tu situación específica...",
   },
+  
+  // === PROFUNDIDAD: MANEJO DEL ESTRÉS ===
   {
-    id: "capital",
+    id: "stress_pattern",
     type: "single-with-other",
-    title: "What's your capital situation?",
+    title: "Bajo presión, ¿qué haces?",
+    subtitle: "Tu patrón bajo estrés",
+    description: "Esto determina qué tipo de ventures son tóxicas para ti",
     options: [
-      { value: "can_invest", label: "I can invest something" },
-      { value: "bootstrapping", label: "Bootstrapping only" },
-      { value: "has_funding", label: "I have access to funding" },
+      { value: "overthink", label: "Analizo en exceso", icon: Brain, description: "Me paralizo pensando todos los escenarios" },
+      { value: "act_rash", label: "Actúo impulsivo", icon: Zap, description: "Tomo decisiones rápidas que luego cuestan" },
+      { value: "withdraw", label: "Me aislo", icon: CircleDot, description: "Desaparezco hasta que pasa la tormenta" },
+      { value: "delegate", label: "Busco ayuda", icon: Users, description: "Necesito hablarlo con alguien de confianza" },
+      { value: "intensify", label: "Doblo apuesta", icon: Flame, description: "El estrés me activa, compito más" },
     ],
-    otherPlaceholder: "¿Tu situación de capital es diferente?",
+    otherPlaceholder: "¿Cómo reaccionas tú bajo presión?",
   },
+  
+  // === PROFUNDIDAD: MOTIVACIÓN PROFUNDA ===
   {
-    id: "team",
+    id: "core_motivation",
     type: "single-with-other",
-    title: "What's your team status?",
+    title: "¿Qué te hace levantarte a las 5am sin despertador?",
+    subtitle: "Tu combustible real",
+    description: "No lo que dices querer, sino lo que realmente te mueve",
     options: [
-      { value: "solo", label: "Solo founder" },
-      { value: "cofounder", label: "With technical cofounder" },
-      { value: "small_team", label: "Small team" },
+      { value: "freedom", label: "Libertad absoluta", icon: Compass, description: "No tener que pedir permiso a nadie nunca más" },
+      { value: "mastery", label: "Maestría", icon: Brain, description: "Ser el mejor del mundo en algo específico" },
+      { value: "impact", label: "Impacto legado", icon: Heart, description: "Cambiar la vida de millones de personas" },
+      { value: "creation", label: "Crear desde cero", icon: Lightbulb, description: "Ver algo nacer de mi cabeza al mundo real" },
+      { value: "wealth", label: "Riqueza extrema", icon: BarChart3, description: "Nunca más preocuparme por dinero, libertad total" },
+      { value: "recognition", label: "Reconocimiento", icon: Crown, description: "Ser visto como el mejor, autoridad absoluta" },
     ],
-    otherPlaceholder: "Describe tu equipo...",
+    otherPlaceholder: "¿Qué es lo que REALMENTE te mueve a ti?",
   },
+  
+  // === PRÁCTICO: CAPITAL ===
   {
-    id: "tech_skills",
+    id: "capital_runway",
     type: "single-with-other",
-    title: "Your technical skills?",
+    title: "Tu pista de despegue",
+    subtitle: "Recursos disponibles",
     options: [
-      { value: "can_code", label: "I can code" },
-      { value: "no_code", label: "I use no-code tools" },
-      { value: "need_technical", label: "I need a technical partner" },
+      { value: "self_funded", label: "Bootstrapping", icon: Shield, description: "Solo mis ahorros, menos de $5k" },
+      { value: "angel_ready", label: "Ángel potencial", icon: Users, description: "Tengo acceso a $20k-$100k si valido" },
+      { value: "vc_backed", label: "Con funding", icon: Crown, description: "Tengo $100k+ comprometidos" },
+      { value: "ramen", label: "Modo supervivencia", icon: Flame, description: "Menos de 6 meses de pista, presión alta" },
     ],
-    otherPlaceholder: "Describe tus habilidades técnicas...",
+    otherPlaceholder: "Describe tu situación de capital...",
   },
+  
+  // === PROFUNDIDAD: OBSESIÓN ===
   {
-    id: "industries",
+    id: "obsession_topic",
+    type: "text",
+    title: "¿Qué investigas cuando nadie te paga por ello?",
+    subtitle: "Tu obsesión orgánica",
+    description: "El tema que consumes en YouTube a las 2am, los libros que compras y no lees, los podcasts que escuchas caminando",
+    placeholder: "Ej: 'Cómo el blockchain está cambiando la propiedad intelectual en música' o 'Psicología del color en conversiones'...",
+  },
+  
+  // === PROFUNDIDAD: SUPERPODER + KRYPTONITA ===
+  {
+    id: "superpower",
     type: "multi-with-other",
-    title: "Industries you've worked in?",
-    description: "Select all that apply, or add your own",
-    maxSelections: 5,
+    title: "Tus superpoderes (máx. 3)",
+    subtitle: "Lo que haces mejor que el 95% de la población",
+    description: "No modestia. ¿En qué te piden ayuda constantemente?",
+    maxSelections: 3,
     options: [
-      { value: "fintech", label: "Fintech" },
-      { value: "ecommerce", label: "E-commerce" },
-      { value: "saas", label: "SaaS" },
-      { value: "health", label: "Health" },
-      { value: "education", label: "Education" },
-      { value: "retail", label: "Retail" },
-      { value: "media", label: "Media" },
-      { value: "food", label: "Food" },
-      { value: "real_estate", label: "Real Estate" },
-      { value: "fitness", label: "Fitness" },
-      { value: "travel", label: "Travel" },
-      { value: "beauty", label: "Beauty" },
-      { value: "gaming", label: "Gaming" },
+      { value: "systems", label: "Pensamiento sistémico" },
+      { value: "design", label: "Diseño de producto/experiencias" },
+      { value: "storytelling", label: "Narrativa y persuasión" },
+      { value: "code", label: "Programación/tech" },
+      { value: "sales", label: "Ventas y cierre" },
+      { value: "data", label: "Análisis de datos" },
+      { value: "marketing", label: "Growth/marketing" },
+      { value: "operations", label: "Operaciones y procesos" },
+      { value: "networking", label: "Relaciones y networking" },
+      { value: "creativity", label: "Creatividad e ideación" },
+      { value: "leadership", label: "Liderazgo de equipos" },
+      { value: "execution", label: "Ejecución implacable" },
     ],
-    otherPlaceholder: "¿Otra industria en la que tengas experiencia?",
+    otherPlaceholder: "¿Algún superpoder que no esté en la lista?",
   },
+  
+  // === PROFUNDIDAD: LO QUE TE DRENA ===
   {
-    id: "ambition",
-    type: "single-with-other",
-    title: "What type of venture attracts you?",
+    id: "kryptonite",
+    type: "multi-with-other",
+    title: "Tu kriptonita (máx. 3)",
+    subtitle: "Lo que te drena energía vital",
+    description: "Tareas que, aunque sepas hacerlas, te dejan exhausto",
+    maxSelections: 3,
     options: [
-      { value: "scale_massive", label: "Massive scale", description: "I want to build something that reaches millions" },
-      { value: "niche_profitable", label: "Profitable niche", description: "I prefer a small but highly profitable business" },
-      { value: "impact_social", label: "Social impact", description: "I want to solve a real world problem" },
-      { value: "experiment", label: "Experiment", description: "I want to learn and validate, failure is OK" },
+      { value: "bureaucracy", label: "Burocracia y papeleo" },
+      { value: "accounting", label: "Contabilidad/finanzas" },
+      { value: "support", label: "Soporte técnico" },
+      { value: "cold_calls", label: "Llamadas en frío" },
+      { value: "content", label: "Crear contenido repetitivo" },
+      { value: "meetings", label: "Reuniones largas" },
+      { value: "management", label: "Gestión de gente" },
+      { value: "details", label: "Detalles administrativos" },
+      { value: "hardware", label: "Logística/hardware" },
+      { value: "compliance", label: "Legal/compliance" },
     ],
-    otherPlaceholder: "Describe tu ambición...",
+    otherPlaceholder: "¿Qué otra cosa te drena completamente?",
+  },
+  
+  // === PRÁCTICO: HABILIDADES TÉCNICAS ===
+  {
+    id: "technical_arsenal",
+    type: "single-with-other",
+    title: "Tu arsenal técnico",
+    subtitle: "¿Qué puedes construir tú mismo?",
+    options: [
+      { value: "full_stack", label: "Full-stack developer", icon: Code, description: "Puedo construir el producto yo solo" },
+      { value: "no_code", label: "No-code/low-code", icon: Zap, description: "MVP rápido con herramientas visuales" },
+      { value: "designer", label: "Diseñador", icon: Palette, description: "Flujos, UI, experiencia de usuario" },
+      { value: "business", label: "Business/ops", icon: Briefcase, description: "Estrategia, operaciones, ventas" },
+      { value: "need_tech", label: "Necesito cofounder técnico", icon: Users, description: "Tengo la visión, busco al builder" },
+    ],
+    otherPlaceholder: "Describe tus habilidades técnicas específicas...",
+  },
+  
+  // === PRÁCTICO: EQUIPO ===
+  {
+    id: "team_status",
+    type: "single-with-other",
+    title: "¿Con quién cuentas?",
+    subtitle: "Tu entorno de soporte",
+    options: [
+      { value: "solo", label: "Solo founder", icon: Target, description: "100% independiente, decisión única" },
+      { value: "cofounder_tech", label: "Cofounder técnico", icon: Code, description: "Tengo al builder, falta validar" },
+      { value: "cofounder_biz", label: "Cofounder business", icon: Briefcase, description: "Tengo al vendedor/ops" },
+      { value: "advisors", label: "Advisors/mentores", icon: Users, description: "Tengo gente experta que me guía" },
+      { value: "small_team", label: "Equipo pequeño", icon: Building2, description: "2-3 personas comprometidas" },
+    ],
+    otherPlaceholder: "Describe tu situación de equipo...",
+  },
+  
+  // === PROFUNDIDAD: EXPERIENCIA SECTORIAL ===
+  {
+    id: "domain_expertise",
+    type: "multi-with-other",
+    title: "¿Dónde tienes ventaja injusta?",
+    subtitle: "Sectores donde sabes cosas que otros no",
+    description: "Industrias donde has trabajado o investigado profundamente",
+    maxSelections: 4,
+    options: [
+      { value: "fintech", label: "Fintech/Payments" },
+      { value: "health", label: "Health/Medtech" },
+      { value: "education", label: "EdTech" },
+      { value: "ecommerce", label: "E-commerce/D2C" },
+      { value: "saas", label: "SaaS/B2B" },
+      { value: "marketplaces", label: "Marketplaces" },
+      { value: "content", label: "Media/Content" },
+      { value: "real_estate", label: "Real Estate/PropTech" },
+      { value: "retail", label: "Retail/Food" },
+      { value: "travel", label: "Travel/Hospitality" },
+      { value: "gaming", label: "Gaming" },
+      { value: "web3", label: "Web3/Crypto" },
+    ],
+    otherPlaceholder: "¿Otro sector donde tengas expertise?",
+  },
+  
+  // === CIERRE: VISIÓN DE ÉXITO ===
+  {
+    id: "success_definition",
+    type: "single-with-other",
+    title: "¿Cómo sabrás que lo lograste?",
+    subtitle: "Tu definición de éxito",
+    description: "Si todo sale perfecto, ¿qué habrás construido?",
+    options: [
+      { value: "unicorn", label: "Unicornio", icon: Crown, description: "$1B+ valuation, cambiar el mundo a escala" },
+      { value: "lifestyle", label: "Lifestyle business", icon: Compass, description: "$50k-$100k/mes, libertad total, 4h semanales" },
+      { value: "impact", label: "Impacto profundo", icon: Heart, description: "Cambiar la vida de 1M+ personas" },
+      { value: "category", label: "Rey de la categoría", icon: Target, description: "Ser el estándar, el nombre que todos conocen" },
+      { value: "exit", label: "Exit millonario", icon: BarChart3, description: "Vender por 8-9 figuras y hacer lo siguiente" },
+    ],
+    otherPlaceholder: "¿Cómo defines TÚ el éxito?",
   },
 ];
 
@@ -265,7 +304,6 @@ export default function DiscoverPage() {
 
   const handleSingleSelect = (value: string) => {
     if (value === "__other__") {
-      // Selected "other", keep selection but wait for text input
       setAnswers({ ...answers, [currentQuestion.id]: "__other__" });
     } else {
       setAnswers({ ...answers, [currentQuestion.id]: value });
@@ -277,7 +315,6 @@ export default function DiscoverPage() {
     const maxSelections = currentQuestion.maxSelections || 3;
     
     if (value === "__other__") {
-      // Toggle "other" selection
       if (current.includes("__other__")) {
         setAnswers({
           ...answers,
@@ -300,6 +337,10 @@ export default function DiscoverPage() {
         [currentQuestion.id]: [...current, value],
       });
     }
+  };
+
+  const handleTextChange = (value: string) => {
+    setAnswers({ ...answers, [currentQuestion.id]: value });
   };
 
   const handleOtherTextChange = (value: string) => {
@@ -383,23 +424,23 @@ export default function DiscoverPage() {
   const getSelectedCount = () => {
     if (currentQuestion.type === "multi-with-other") {
       const arr = (answers[currentQuestion.id] as string[]) || [];
-      return arr.length;
+      return arr.filter(v => v !== "__other__").length;
     }
-    return answers[currentQuestion.id] ? 1 : 0;
+    return answers[currentQuestion.id] && answers[currentQuestion.id] !== "__other__" ? 1 : 0;
   };
 
   return (
-    <main className="min-h-screen dot-pattern-bg py-20 px-4">
+    <main className="min-h-screen dot-pattern-bg py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <Link href="/" className="text-sm text-neutral-500 hover:text-neutral-900 mb-4 inline-flex items-center gap-1">
             <ArrowLeft className="w-4 h-4" />
-            Back to home
+            Back
           </Link>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-neutral-500">
-              Question {currentStep + 1} of {questions.length}
+              {currentStep + 1} / {questions.length}
             </span>
             <span className="text-sm font-medium text-neutral-900">
               {Math.round(progress)}%
@@ -412,22 +453,30 @@ export default function DiscoverPage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="bg-white border-neutral-200">
-              <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-neutral-900 mb-2">
-                  {currentQuestion.title}
-                </h2>
-                {currentQuestion.description && (
-                  <p className="text-neutral-600 mb-6">{currentQuestion.description}</p>
-                )}
+            <Card className="bg-white border-neutral-200 shadow-sm">
+              <CardContent className="p-6 sm:p-8">
+                {/* Question header with subtle styling */}
+                <div className="mb-6">
+                  {currentQuestion.subtitle && (
+                    <span className="text-xs font-medium text-indigo-600 uppercase tracking-wider">
+                      {currentQuestion.subtitle}
+                    </span>
+                  )}
+                  <h2 className="text-2xl font-bold text-neutral-900 mt-1">
+                    {currentQuestion.title}
+                  </h2>
+                  {currentQuestion.description && (
+                    <p className="text-neutral-600 mt-2 text-sm">{currentQuestion.description}</p>
+                  )}
+                </div>
 
                 {/* Single Select with Other */}
-                {(currentQuestion.type === "single" || currentQuestion.type === "single-with-other") && (
+                {(currentQuestion.type === "single" || currentQuestion.type === "single-with-other") && currentQuestion.options && (
                   <div className="space-y-3">
                     {currentQuestion.options.map((option) => {
                       const Icon = option.icon;
@@ -451,7 +500,7 @@ export default function DiscoverPage() {
                                 <Icon className={`w-5 h-5 ${isSelected ? "text-white" : "text-neutral-600"}`} />
                               </div>
                             )}
-                            <div>
+                            <div className="flex-1">
                               <div className="font-semibold">{option.label}</div>
                               {option.description && (
                                 <div className={`text-sm mt-1 ${isSelected ? "text-white/80" : "text-neutral-500"}`}>
@@ -487,11 +536,11 @@ export default function DiscoverPage() {
                             animate={{ opacity: 1, height: "auto" }}
                             className="mt-3"
                           >
-                            <Input
+                            <Textarea
                               value={otherText[currentQuestion.id] || ""}
                               onChange={(e) => handleOtherTextChange(e.target.value)}
                               placeholder={currentQuestion.otherPlaceholder}
-                              className="w-full"
+                              className="w-full min-h-[100px]"
                               autoFocus
                             />
                           </motion.div>
@@ -502,7 +551,7 @@ export default function DiscoverPage() {
                 )}
 
                 {/* Multi Select with Other */}
-                {(currentQuestion.type === "multi" || currentQuestion.type === "multi-with-other") && (
+                {(currentQuestion.type === "multi" || currentQuestion.type === "multi-with-other") && currentQuestion.options && (
                   <div>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {currentQuestion.options.map((option) => {
@@ -544,20 +593,32 @@ export default function DiscoverPage() {
                         animate={{ opacity: 1, height: "auto" }}
                         className="mb-4"
                       >
-                        <Input
+                        <Textarea
                           value={otherText[currentQuestion.id] || ""}
                           onChange={(e) => handleOtherTextChange(e.target.value)}
                           placeholder={currentQuestion.otherPlaceholder}
-                          className="w-full"
+                          className="w-full min-h-[80px]"
                           autoFocus
                         />
                       </motion.div>
                     )}
                     
                     <p className="text-sm text-neutral-500">
-                      Selected: {getSelectedCount()} / {currentQuestion.maxSelections}
+                      Seleccionados: {getSelectedCount()} / {currentQuestion.maxSelections}
                     </p>
                   </div>
+                )}
+
+                {/* Text Input */}
+                {currentQuestion.type === "text" && (
+                  <Textarea
+                    value={(answers[currentQuestion.id] as string) || ""}
+                    onChange={(e) => handleTextChange(e.target.value)}
+                    placeholder={currentQuestion.placeholder}
+                    rows={4}
+                    className="w-full"
+                    autoFocus
+                  />
                 )}
               </CardContent>
             </Card>
@@ -565,7 +626,7 @@ export default function DiscoverPage() {
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-8">
+        <div className="flex items-center justify-between mt-6">
           <Button
             variant="outline"
             onClick={handleBack}
@@ -584,16 +645,16 @@ export default function DiscoverPage() {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                Processing...
+                Procesando...
               </>
             ) : currentStep === questions.length - 1 ? (
               <>
-                Generate My DNA
+                Generar mi DNA
                 <ArrowRight className="ml-2 w-4 h-4" />
               </>
             ) : (
               <>
-                Next
+                Siguiente
                 <ArrowRight className="ml-2 w-4 h-4" />
               </>
             )}
