@@ -313,10 +313,47 @@ export default function DiscoverPage() {
   const currentQuestion = useMemo(() => questions[currentStep], [currentStep]);
   const progress = ((currentStep + 1) / questions.length) * 100;
 
+  // Submit handler (defined early for use in single select)
+  const handleSubmitFromAnswers = useCallback(async (finalAnswers: Record<string, any>) => {
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_STEP_KEY);
+      localStorage.setItem("ventureGates_answers", JSON.stringify(finalAnswers));
+      router.push("/discover/processing");
+    } catch (err) {
+      setError("Failed to save. Please try again.");
+      setIsSubmitting(false);
+    }
+  }, [router]);
+
+  // Navigate to next step
+  const goToNext = useCallback(() => {
+    if (currentStep < questions.length - 1) {
+      setCurrentStep((prev) => prev + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentStep]);
+
   const handleSingleSelect = useCallback((value: string) => {
     setError(null);
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
-  }, [currentQuestion.id]);
+    
+    // Auto-advance for single select (but not for "Other" option)
+    if (value !== "__other__") {
+      setTimeout(() => {
+        if (currentStep === questions.length - 1) {
+          // Last question - submit
+          const finalAnswers = { ...answers, [currentQuestion.id]: value };
+          handleSubmitFromAnswers(finalAnswers);
+        } else {
+          goToNext();
+        }
+      }, 300);
+    }
+  }, [currentQuestion.id, currentQuestion.type, currentStep, goToNext, answers, handleSubmitFromAnswers]);
 
   const handleMultiSelect = useCallback((value: string) => {
     setError(null);
@@ -380,12 +417,11 @@ export default function DiscoverPage() {
     
     if (currentStep < questions.length - 1) {
       setAnswers((prev) => ({ ...prev, [currentQuestion.id]: finalAnswer }));
-      setCurrentStep((prev) => prev + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      goToNext();
     } else {
       handleSubmit(finalAnswer);
     }
-  }, [currentStep, currentQuestion.id, getCurrentAnswer]);
+  }, [currentStep, currentQuestion.id, getCurrentAnswer, goToNext]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 0) {
@@ -395,21 +431,9 @@ export default function DiscoverPage() {
   }, [currentStep]);
 
   const handleSubmit = useCallback(async (finalAnswer: any) => {
-    setIsSubmitting(true);
-    setError(null);
-    
     const finalAnswers = { ...answers, [currentQuestion.id]: finalAnswer };
-    
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_STEP_KEY);
-      localStorage.setItem("ventureGates_answers", JSON.stringify(finalAnswers));
-      router.push("/discover/processing");
-    } catch (err) {
-      setError("Failed to save. Please try again.");
-      setIsSubmitting(false);
-    }
-  }, [answers, currentQuestion.id, router]);
+    await handleSubmitFromAnswers(finalAnswers);
+  }, [answers, currentQuestion.id, handleSubmitFromAnswers]);
 
   const isOtherSelected = useCallback(() => {
     if (currentQuestion.type === "single-with-other") {
@@ -429,19 +453,6 @@ export default function DiscoverPage() {
     return answers[currentQuestion.id] && answers[currentQuestion.id] !== "__other__" ? 1 : 0;
   }, [answers, currentQuestion.type, currentQuestion.id]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && canProceed() && !isSubmitting) {
-        e.preventDefault();
-        handleNext();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canProceed, isSubmitting, handleNext]);
-
   if (!isClient) {
     return (
       <main className="min-h-screen dot-pattern-bg py-8 px-4">
@@ -454,6 +465,9 @@ export default function DiscoverPage() {
       </main>
     );
   }
+
+  const isSingleSelect = currentQuestion.type === "single" || currentQuestion.type === "single-with-other";
+  const showNavigation = !isSingleSelect || isOtherSelected();
 
   return (
     <main className="min-h-screen dot-pattern-bg py-8 px-4">
@@ -522,7 +536,7 @@ export default function DiscoverPage() {
                 </div>
 
                 {/* Single Select with Other */}
-                {(currentQuestion.type === "single" || currentQuestion.type === "single-with-other") && currentQuestion.options && (
+                {isSingleSelect && currentQuestion.options && (
                   <div className="space-y-3">
                     {currentQuestion.options.map((option) => {
                       const Icon = option.icon;
@@ -668,44 +682,42 @@ export default function DiscoverPage() {
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-6">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentStep === 0 || isSubmitting}
-            className="border-neutral-300 hover:bg-white"
-          >
-            <ArrowLeft className="mr-2 w-4 h-4" />
-            Back
-          </Button>
-          
-          <Button
-            onClick={handleNext}
-            disabled={!canProceed() || isSubmitting}
-            className="bg-neutral-900 hover:bg-neutral-800 text-white"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                Processing...
-              </>
-            ) : currentStep === questions.length - 1 ? (
-              <>
-                Generate My DNA
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </>
-            ) : (
-              <>
-                Next
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </>
-            )}
-          </Button>
-        </div>
-        
-        <p className="mt-4 text-center text-xs text-neutral-400">
-          Press Cmd/Ctrl + Enter to continue
-        </p>
+        {showNavigation && (
+          <div className="flex items-center justify-between mt-6">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={currentStep === 0 || isSubmitting}
+              className="border-neutral-300 hover:bg-white"
+            >
+              <ArrowLeft className="mr-2 w-4 h-4" />
+              Back
+            </Button>
+            
+            <Button
+              onClick={handleNext}
+              disabled={!canProceed() || isSubmitting}
+              className="bg-neutral-900 hover:bg-neutral-800 text-white"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : currentStep === questions.length - 1 ? (
+                <>
+                  Generate My DNA
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </main>
   );
