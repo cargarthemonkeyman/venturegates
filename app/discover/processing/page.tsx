@@ -50,11 +50,15 @@ export default function ProcessingPage() {
           });
         }, 1500);
 
-        // Call API
+        // Call API with metadata
         const response = await fetch("/api/generate-venture-dna", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ answers }),
+          body: JSON.stringify({
+            answers,
+            ip_address: "", // Will be captured server-side or left empty
+            user_agent: navigator.userAgent,
+          }),
         });
 
         if (!response.ok) {
@@ -63,9 +67,15 @@ export default function ProcessingPage() {
 
         const data = await response.json();
 
-        // Store result and navigate
+        // Store result with Supabase IDs
         localStorage.setItem("ventureGates_result", JSON.stringify(data));
-        router.push("/discover/results");
+        
+        // If we have a share slug, redirect to profile page
+        if (data.share_slug) {
+          router.push(`/profile/${data.share_slug}`);
+        } else {
+          router.push("/discover/results");
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong");
       }

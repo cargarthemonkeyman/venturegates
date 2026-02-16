@@ -97,10 +97,19 @@ export interface GateScores {
   personal_gates: Record<string, { score: number; reason: string }>;
 }
 
-// Helper to increment views
-export async function incrementVentureViews(ventureId: string) {
-  const { error } = await supabase.rpc('increment_venture_views', {
-    venture_id: ventureId,
-  });
-  if (error) console.error('Error incrementing views:', error);
+// Helper to increment views by slug
+export async function incrementVentureViews(slug: string) {
+  // First get the ID from slug
+  const { data: venture } = await supabase
+    .from('ventures')
+    .select('id')
+    .eq('share_slug', slug)
+    .single();
+  
+  if (venture) {
+    const { error } = await supabase.rpc('increment_venture_views', {
+      venture_id: venture.id,
+    });
+    if (error) console.error('Error incrementing views:', error);
+  }
 }

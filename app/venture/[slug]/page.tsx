@@ -1,12 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft,
   Target,
   TrendingUp,
   ExternalLink,
@@ -18,50 +15,47 @@ import {
   BarChart3,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { incrementVentureViews } from "@/lib/supabase";
 
-interface Venture {
-  name: string;
-  tagline: string;
-  category: string;
-  description: string;
-  offer: string;
-  why_now: string;
-  proof_signals: Array<{ source: string; signal: string; data?: string }>;
-  market_gap: string;
-  competitors: Array<{ name: string; url?: string; what_they_do: string; why_not_enough: string }>;
-  founder_market_fit: string;
-  execution_plan: Array<{ week: number; focus: string; tasks: string[]; tools: string[] }>;
-  monetization: { model: string; who_pays: string; price: string; why_they_pay: string };
-  gate_scores: {
-    market_gates: Record<string, { score: number; reason: string }>;
-    personal_gates: Record<string, { score: number; reason: string }>;
-  };
-  total_score: number;
-  founder_market_fit_score: number;
+interface Props {
+  params: { slug: string };
 }
 
-export default function VentureDetailPage() {
-  const params = useParams();
-  const [venture, setVenture] = useState<Venture | null>(null);
-
-  useEffect(() => {
-    const resultJson = localStorage.getItem("ventureGates_result");
-    if (resultJson) {
-      const data = JSON.parse(resultJson);
-      const index = parseInt(params.id as string);
-      if (data.ventures[index]) {
-        setVenture(data.ventures[index]);
-      }
-    }
-  }, [params.id]);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { data: venture } = await supabase
+    .from("ventures")
+    .select("name, tagline")
+    .eq("share_slug", params.slug)
+    .eq("is_public", true)
+    .single();
 
   if (!venture) {
-    return (
-      <main className="min-h-screen dot-pattern-bg flex items-center justify-center">
-        <div className="animate-pulse text-neutral-500">Loading...</div>
-      </main>
-    );
+    return { title: "Not Found" };
+  }
+
+  return {
+    title: `${venture.name} | VentureGates`,
+    description: venture.tagline,
+  };
+}
+
+export default async function VentureDetailPage({ params }: Props) {
+  // Increment views
+  await incrementVentureViews(params.slug);
+
+  // Fetch venture with profile
+  const { data: venture } = await supabase
+    .from("ventures")
+    .select(`
+      *,
+      profiles!inner(entrepreneur_type, share_slug)
+    `)
+    .eq("share_slug", params.slug)
+    .eq("is_public", true)
+    .single();
+
+  if (!venture) {
+    notFound();
   }
 
   const getScoreColor = (score: number) => {
@@ -76,11 +70,10 @@ export default function VentureDetailPage() {
         {/* Header */}
         <div className="mb-8">
           <Link
-            href="/discover/results"
+            href="/ventures"
             className="text-sm text-neutral-500 hover:text-neutral-900 mb-4 inline-flex items-center gap-1"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to results
+            ← Back to catalog
           </Link>
 
           <div className="flex items-start justify-between gap-4">
@@ -92,7 +85,9 @@ export default function VentureDetailPage() {
               <p className="text-xl text-neutral-600">{venture.tagline}</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-neutral-900">{venture.total_score.toFixed(1)}</div>
+              <div className="text-3xl font-bold text-neutral-900">
+                {venture.total_score?.toFixed(1)}
+              </div>
               <div className="text-sm text-neutral-500">Gate Score</div>
             </div>
           </div>
@@ -103,61 +98,50 @@ export default function VentureDetailPage() {
               <span className="text-neutral-600">Founder-Market Fit:</span>
               <span className="font-medium text-neutral-900">{venture.founder_market_fit_score}%</span>
             </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="w-4 h-4 text-neutral-400" />
+              <span className="text-neutral-600">Generated for:</span>
+              <Link 
+                href={`/profile/${venture.profiles?.share_slug}`}
+                className="font-medium text-indigo-600 hover:underline"
+              >
+                {venture.profiles?.entrepreneur_type}
+              </Link>
+            </div>
           </div>
         </div>
 
         {/* Content */}
         <div className="space-y-8">
           {/* What is it */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Card className="bg-white border-neutral-200">
-              <CardContent className="p-8">
-                <h2 className="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5" />
-                  What is it
-                </h2>
-                <p className="text-neutral-700 leading-relaxed">{venture.description}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <Card className="bg-white border-neutral-200">
+            <CardContent className="p-8">
+              <h2 className="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                <Lightbulb className="w-5 h-5" />
+                What is it
+              </h2>
+              <p className="text-neutral-700 leading-relaxed">{venture.description}</p>
+            </CardContent>
+          </Card>
 
           {/* The Offer */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="bg-white border-neutral-200">
-              <CardContent className="p-8">
-                <h2 className="text-xl font-bold text-neutral-900 mb-4">The Offer</h2>
-                <p className="text-neutral-700 leading-relaxed">{venture.offer}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <Card className="bg-white border-neutral-200">
+            <CardContent className="p-8">
+              <h2 className="text-xl font-bold text-neutral-900 mb-4">The Offer</h2>
+              <p className="text-neutral-700 leading-relaxed">{venture.offer}</p>
+            </CardContent>
+          </Card>
 
           {/* Why Now */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card className="card-dark border-0">
-              <CardContent className="p-8">
-                <h2 className="text-xl font-bold text-white mb-4">Why Now</h2>
-                <p className="text-neutral-300 leading-relaxed">{venture.why_now}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <Card className="card-dark border-0">
+            <CardContent className="p-8">
+              <h2 className="text-xl font-bold text-white mb-4">Why Now</h2>
+              <p className="text-neutral-300 leading-relaxed">{venture.why_now}</p>
+            </CardContent>
+          </Card>
 
           {/* Proof Signals */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
+          {venture.proof_signals && venture.proof_signals.length > 0 && (
             <Card className="bg-white border-neutral-200">
               <CardContent className="p-8">
                 <h2 className="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
@@ -165,7 +149,7 @@ export default function VentureDetailPage() {
                   Proof Signals
                 </h2>
                 <div className="space-y-3">
-                  {venture.proof_signals.map((signal, i) => (
+                  {venture.proof_signals.map((signal: any, i: number) => (
                     <div key={i} className="flex items-start gap-3 p-4 rounded-lg bg-neutral-50">
                       <span className="text-2xl">
                         {signal.source === "Reddit" && "🤖"}
@@ -185,28 +169,18 @@ export default function VentureDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          )}
 
           {/* Market Gap */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="bg-white border-neutral-200">
-              <CardContent className="p-8">
-                <h2 className="text-xl font-bold text-neutral-900 mb-4">Market Gap</h2>
-                <p className="text-neutral-700 leading-relaxed">{venture.market_gap}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <Card className="bg-white border-neutral-200">
+            <CardContent className="p-8">
+              <h2 className="text-xl font-bold text-neutral-900 mb-4">Market Gap</h2>
+              <p className="text-neutral-700 leading-relaxed">{venture.market_gap}</p>
+            </CardContent>
+          </Card>
 
           {/* Competitors */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
+          {venture.competitors && venture.competitors.length > 0 && (
             <Card className="bg-white border-neutral-200">
               <CardContent className="p-8">
                 <h2 className="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
@@ -214,7 +188,7 @@ export default function VentureDetailPage() {
                   Competitors
                 </h2>
                 <div className="space-y-4">
-                  {venture.competitors.map((comp, i) => (
+                  {venture.competitors.map((comp: any, i: number) => (
                     <div key={i} className="p-4 rounded-lg border border-neutral-200">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="font-bold text-neutral-900">{comp.name}</span>
@@ -236,31 +210,21 @@ export default function VentureDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          )}
 
           {/* Founder-Market Fit */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <Card className="card-accent-purple border-0">
-              <CardContent className="p-8">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Founder-Market Fit
-                </h2>
-                <p className="text-white/90 leading-relaxed">{venture.founder_market_fit}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+          <Card className="card-accent-purple border-0">
+            <CardContent className="p-8">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Founder-Market Fit
+              </h2>
+              <p className="text-white/90 leading-relaxed">{venture.founder_market_fit}</p>
+            </CardContent>
+          </Card>
 
           {/* Execution Plan */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-          >
+          {venture.execution_plan && venture.execution_plan.length > 0 && (
             <Card className="bg-white border-neutral-200">
               <CardContent className="p-8">
                 <h2 className="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
@@ -268,7 +232,7 @@ export default function VentureDetailPage() {
                   Execution Plan (Weeks 1-4)
                 </h2>
                 <div className="space-y-4">
-                  {venture.execution_plan.map((week) => (
+                  {venture.execution_plan.map((week: any) => (
                     <div key={week.week} className="flex gap-4">
                       <div className="w-12 h-12 rounded-full bg-neutral-900 text-white flex items-center justify-center font-bold flex-shrink-0">
                         {week.week}
@@ -276,13 +240,16 @@ export default function VentureDetailPage() {
                       <div className="flex-1 p-4 rounded-lg bg-neutral-50">
                         <div className="font-bold text-neutral-900 mb-2">{week.focus}</div>
                         <ul className="space-y-1 mb-3">
-                          {week.tasks.map((task, i) => (
+                          {week.tasks.map((task: string, i: number) => (
                             <li key={i} className="text-sm text-neutral-600">• {task}</li>
                           ))}
                         </ul>
                         <div className="flex flex-wrap gap-2">
-                          {week.tools.map((tool, i) => (
-                            <span key={i} className="text-xs px-2 py-1 rounded bg-neutral-200 text-neutral-700">
+                          {week.tools.map((tool: string, i: number) => (
+                            <span
+                              key={i}
+                              className="text-xs px-2 py-1 rounded bg-neutral-200 text-neutral-700"
+                            >
                               {tool}
                             </span>
                           ))}
@@ -293,14 +260,10 @@ export default function VentureDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          )}
 
           {/* Monetization */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-          >
+          {venture.monetization && (
             <Card className="bg-white border-neutral-200">
               <CardContent className="p-8">
                 <h2 className="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
@@ -327,59 +290,63 @@ export default function VentureDetailPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          )}
 
           {/* Gate Scores */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
-          >
+          {venture.gate_scores && (
             <Card className="bg-white border-neutral-200">
               <CardContent className="p-8">
                 <h2 className="text-xl font-bold text-neutral-900 mb-4 flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
                   Gate Scorecard
                 </h2>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-medium text-neutral-900 mb-3">Market Gates</h3>
-                    <div className="space-y-2">
-                      {Object.entries(venture.gate_scores.market_gates).map(([key, data]) => (
-                        <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-neutral-50">
-                          <span className="text-sm text-neutral-700 capitalize">{key.replace(/_/g, " ")}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-neutral-500 max-w-xs truncate hidden sm:block">{data.reason}</span>
-                            <span className={`px-2 py-1 rounded text-sm font-medium ${getScoreColor(data.score)}`}>
-                              {data.score}/5
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div>
-                    <h3 className="font-medium text-neutral-900 mb-3">Personal Gates</h3>
-                    <div className="space-y-2">
-                      {Object.entries(venture.gate_scores.personal_gates).map(([key, data]) => (
-                        <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-neutral-50">
-                          <span className="text-sm text-neutral-700 capitalize">{key.replace(/_/g, " ")}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-neutral-500 max-w-xs truncate hidden sm:block">{data.reason}</span>
-                            <span className={`px-2 py-1 rounded text-sm font-medium ${getScoreColor(data.score)}`}>
-                              {data.score}/5
-                            </span>
+                <div className="space-y-6">
+                  {venture.gate_scores.market_gates && (
+                    <div>
+                      <h3 className="font-medium text-neutral-900 mb-3">Market Gates</h3>
+                      <div className="space-y-2">
+                        {Object.entries(venture.gate_scores.market_gates).map(([key, data]: [string, any]) => (
+                          <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-neutral-50">
+                            <span className="text-sm text-neutral-700 capitalize">{key.replace(/_/g, " ")}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-neutral-500 max-w-xs truncate hidden sm:block">
+                                {data.reason}
+                              </span>
+                              <span className={`px-2 py-1 rounded text-sm font-medium ${getScoreColor(data.score)}`}>
+                                {data.score}/5
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {venture.gate_scores.personal_gates && (
+                    <div>
+                      <h3 className="font-medium text-neutral-900 mb-3">Personal Gates</h3>
+                      <div className="space-y-2">
+                        {Object.entries(venture.gate_scores.personal_gates).map(([key, data]: [string, any]) => (
+                          <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-neutral-50">
+                            <span className="text-sm text-neutral-700 capitalize">{key.replace(/_/g, " ")}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-neutral-500 max-w-xs truncate hidden sm:block">
+                                {data.reason}
+                              </span>
+                              <span className={`px-2 py-1 rounded text-sm font-medium ${getScoreColor(data.score)}`}>
+                                {data.score}/5
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          )}
         </div>
       </div>
     </main>

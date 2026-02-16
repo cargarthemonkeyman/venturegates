@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { supabase } from "@/lib/supabase";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -100,7 +101,7 @@ RESPONSE FORMAT (JSON):
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { answers } = body;
+    const { answers, ip_address, user_agent } = body;
 
     if (!answers) {
       return NextResponse.json(
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
       .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
       .join("\n");
 
+    // Generate with Anthropic
     const response = await anthropic.messages.create({
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 8000,
@@ -142,6 +144,71 @@ Respond ONLY with valid JSON in the format specified.`,
     }
 
     const result = JSON.parse(jsonMatch[0]);
+
+    // Save profile to Supabase
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        entrepreneur_type: result.venture_dna.entrepreneur_type,
+        obsession: answers.obsession,
+        strengths: answers.strengths || [],
+        drains: answers.drains || [],
+        time_availability: answers.context,
+        capital: answers.capital,
+        team: answers.team,
+        tech_skills: answers.tech_skills,
+        industries: answers.industries || [],
+        ambition: answers.ambition,
+        non_negotiables: result.venture_dna.non_negotiables,
+        accelerators: result.venture_dna.accelerators,
+        red_flags: result.venture_dna.red_flags,
+        venture_dna: result.venture_dna,
+        is_public: true,
+        ip_address,
+        user_agent,
+      })
+      .select()
+      .single();
+
+    if (profileError) {
+      console.error("Error saving profile:", profileError);
+      // Continue without failing - return result anyway
+    }
+
+    // Save ventures to Supabase if profile was created
+    if (profile) {
+      const venturesToInsert = result.ventures.map((v: any) => ({
+        profile_id: profile.id,
+        name: v.name,
+        tagline: v.tagline,
+        category: v.category,
+        description: v.description,
+        offer: v.offer,
+        why_now: v.why_now,
+        proof_signals: v.proof_signals,
+        market_gap: v.market_gap,
+        competitors: v.competitors,
+        founder_market_fit: v.founder_market_fit,
+        execution_plan: v.execution_plan,
+        monetization: v.monetization,
+        gate_scores: v.gate_scores,
+        total_score: v.total_score,
+        founder_market_fit_score: Math.round((v.founder_market_fit_score || v.total_score * 20)),
+        is_public: true,
+      }));
+
+      const { error: venturesError } = await supabase
+        .from("ventures")
+        .insert(venturesToInsert);
+
+      if (venturesError) {
+        console.error("Error saving ventures:", venturesError);
+      }
+
+      // Add IDs to result for frontend
+      result.profile_id = profile.id;
+      result.share_slug = profile.share_slug;
+    }
 
     return NextResponse.json(result);
   } catch (error) {

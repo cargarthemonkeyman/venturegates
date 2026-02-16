@@ -1,74 +1,41 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Metadata } from "next";
+import { supabase } from "@/lib/supabase";
+import { Venture } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
-  Search,
   Target,
   TrendingUp,
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
-interface Venture {
-  id: string;
-  name: string;
-  tagline: string;
-  category: string;
-  description: string;
-  total_score: number;
-  founder_market_fit_score: number;
-  views: number;
-  entrepreneur_type: string;
-}
+export const metadata: Metadata = {
+  title: "Venture Catalog | VentureGates",
+  description: "Browse all generated ventures. Filter by category, score, and type.",
+};
 
-export default function VenturesPage() {
-  const [ventures, setVentures] = useState<Venture[]>([]);
-  const [filteredVentures, setFilteredVentures] = useState<Venture[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+export default async function VenturesPage() {
+  // Fetch all public ventures with their profiles
+  const { data: ventures, error } = await supabase
+    .from("ventures")
+    .select(`
+      *,
+      profiles!inner(entrepreneur_type)
+    `)
+    .eq("is_public", true)
+    .order("total_score", { ascending: false })
+    .limit(50);
 
-  useEffect(() => {
-    // For demo, load from localStorage or show sample data
-    const resultJson = localStorage.getItem("ventureGates_result");
-    if (resultJson) {
-      const data = JSON.parse(resultJson);
-      const venturesWithIds = data.ventures.map((v: any, index: number) => ({
-        ...v,
-        id: index.toString(),
-        views: Math.floor(Math.random() * 500),
-        entrepreneur_type: data.venture_dna.entrepreneur_type,
-      }));
-      setVentures(venturesWithIds);
-      setFilteredVentures(venturesWithIds);
-    }
-  }, []);
+  if (error) {
+    console.error("Error fetching ventures:", error);
+  }
 
-  useEffect(() => {
-    let filtered = ventures;
-
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (v) =>
-          v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          v.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          v.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (selectedCategory) {
-      filtered = filtered.filter((v) => v.category === selectedCategory);
-    }
-
-    setFilteredVentures(filtered);
-  }, [searchQuery, selectedCategory, ventures]);
-
-  const categories = [...new Set(ventures.map((v) => v.category))];
+  const categories = ventures
+    ? [...new Set(ventures.map((v: any) => v.category))]
+    : [];
 
   return (
     <main className="min-h-screen dot-pattern-bg py-20 px-4">
@@ -79,126 +46,99 @@ export default function VenturesPage() {
             Venture Catalog
           </h1>
           <p className="text-neutral-600">
-            Browse all generated ventures. Filter by category, score, or search.
+            Browse all generated ventures. Discover ideas filtered by founder profiles.
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-            <Input
-              placeholder="Search ventures..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white border-neutral-200"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedCategory === null
-                  ? "bg-neutral-900 text-white"
-                  : "bg-white text-neutral-700 hover:bg-neutral-100"
-              }`}
+        {/* Categories */}
+        {categories.length > 0 && (
+          <div className="flex gap-2 flex-wrap mb-8">
+            <Link
+              href="/ventures"
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-neutral-900 text-white"
             >
               All
-            </button>
+            </Link>
             {categories.map((cat) => (
-              <button
+              <span
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedCategory === cat
-                    ? "bg-neutral-900 text-white"
-                    : "bg-white text-neutral-700 hover:bg-neutral-100"
-                }`}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-white text-neutral-700 border border-neutral-200"
               >
                 {cat}
-              </button>
+              </span>
             ))}
           </div>
-        </div>
+        )}
 
         {/* Results count */}
         <div className="mb-6 text-sm text-neutral-500">
-          Showing {filteredVentures.length} venture{filteredVentures.length !== 1 && "s"}
+          Showing {ventures?.length || 0} venture{ventures?.length !== 1 && "s"}
         </div>
 
         {/* Grid */}
-        {filteredVentures.length > 0 ? (
+        {ventures && ventures.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVentures.map((venture, index) => (
-              <motion.div
+            {ventures.map((venture: any, index: number) => (
+              <Card
                 key={venture.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                className="bg-white border-neutral-200 hover:border-neutral-400 transition-colors h-full flex flex-col"
               >
-                <Card className="bg-white border-neutral-200 hover:border-neutral-400 transition-colors h-full flex flex-col">
-                  <CardContent className="p-6 flex-1 flex flex-col">
-                    <div className="flex items-start justify-between mb-4">
-                      <Badge className="bg-neutral-100 text-neutral-700 border-0">
-                        {venture.category}
-                      </Badge>
-                      <div className="flex items-center gap-1 text-sm font-medium text-neutral-900">
-                        <Target className="w-4 h-4" />
-                        {venture.total_score.toFixed(1)}
-                      </div>
+                <CardContent className="p-6 flex-1 flex flex-col">
+                  <div className="flex items-start justify-between mb-4">
+                    <Badge className="bg-neutral-100 text-neutral-700 border-0">
+                      {venture.category}
+                    </Badge>
+                    <div className="flex items-center gap-1 text-sm font-medium text-neutral-900">
+                      <Target className="w-4 h-4" />
+                      {venture.total_score?.toFixed(1)}
                     </div>
+                  </div>
 
-                    <h3 className="text-lg font-bold text-neutral-900 mb-2">
-                      {venture.name}
-                    </h3>
-                    <p className="text-neutral-600 text-sm mb-4 flex-1">
-                      {venture.tagline}
-                    </p>
+                  <h3 className="text-lg font-bold text-neutral-900 mb-2">
+                    {venture.name}
+                  </h3>
+                  <p className="text-neutral-600 text-sm mb-4 flex-1 line-clamp-2">
+                    {venture.tagline}
+                  </p>
 
-                    <div className="flex items-center gap-4 text-xs text-neutral-500 mb-4">
-                      <div className="flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" />
-                        <span>Fit: {venture.founder_market_fit_score}%</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        <span>For: {venture.entrepreneur_type}</span>
-                      </div>
+                  <div className="flex items-center gap-4 text-xs text-neutral-500 mb-4">
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" />
+                      <span>Fit: {venture.founder_market_fit_score}%</span>
                     </div>
+                    <div className="flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      <span>For: {venture.profiles?.entrepreneur_type || "Founder"}</span>
+                    </div>
+                  </div>
 
-                    <Link href={`/venture/${venture.id}`}>
-                      <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white">
-                        View Details
-                        <ArrowRight className="ml-2 w-4 h-4" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
+                  <Link href={`/venture/${venture.share_slug}`}>
+                    <Button className="w-full bg-neutral-900 hover:bg-neutral-800 text-white">
+                      View Details
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : (
           <Card className="bg-white border-neutral-200">
             <CardContent className="p-12 text-center">
               <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-neutral-400" />
+                <Sparkles className="w-8 h-8 text-neutral-400" />
               </div>
               <h3 className="text-lg font-medium text-neutral-900 mb-2">
-                No ventures found
+                No ventures yet
               </h3>
               <p className="text-neutral-600 mb-4">
-                Try adjusting your search or filters
+                Be the first to generate your Venture DNA
               </p>
-              <Button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory(null);
-                }}
-                variant="outline"
-                className="border-neutral-300"
-              >
-                Clear filters
-              </Button>
+              <Link href="/discover">
+                <Button className="bg-neutral-900 hover:bg-neutral-800 text-white">
+                  Discover My DNA
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}
