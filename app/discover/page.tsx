@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import {
   Brain,
   Sparkles,
@@ -14,72 +15,124 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
+  Search,
+  Compass,
+  Flame,
+  Heart,
+  Scale,
+  Lightbulb,
+  Target,
+  Shield,
+  PartyPopper,
+  CircleDot,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 // Question types
+interface Option {
+  value: string;
+  label: string;
+  icon?: React.ElementType;
+  description?: string;
+}
+
 interface Question {
   id: string;
-  type: "single" | "multi" | "text";
+  type: "single" | "multi" | "single-with-other" | "multi-with-other";
   title: string;
   description?: string;
-  options?: { value: string; label: string; icon?: React.ElementType; description?: string }[];
+  options: Option[];
   placeholder?: string;
+  otherPlaceholder?: string;
   maxSelections?: number;
 }
 
 const questions: Question[] = [
+  // === PERSONALIDAD / ENEAGRAMA (Nuevas) ===
+  {
+    id: "eneagrama",
+    type: "single-with-other",
+    title: "¿Cuál es tu tipo de personalidad (Eneagrama)?",
+    description: "Selecciona el número que mejor te describe, o 'Otro' si prefieres especificar",
+    options: [
+      { value: "1", label: "Tipo 1 - El Reformador", icon: Scale, description: "Perfeccionista, ético, busca lo correcto" },
+      { value: "2", label: "Tipo 2 - El Ayudador", icon: Heart, description: "Cariñoso, generoso, orientado a personas" },
+      { value: "3", label: "Tipo 3 - El Triunfador", icon: Crown, description: "Adaptable, exitoso, orientado a resultados" },
+      { value: "4", label: "Tipo 4 - El Individualista", icon: Sparkles, description: "Expresivo, creativo, busca autenticidad" },
+      { value: "5", label: "Tipo 5 - El Investigador", icon: Search, description: "Intensivo, innovador, aislado" },
+      { value: "6", label: "Tipo 6 - El Leal", icon: Shield, description: "Comprometido, responsable, orientado a seguridad" },
+      { value: "7", label: "Tipo 7 - El Entusiasta", icon: PartyPopper, description: "Versátil, espontáneo, busca experiencias" },
+      { value: "8", label: "Tipo 8 - El Desafiador", icon: Flame, description: "Autoconfiable, decisivo, orientado a control" },
+      { value: "9", label: "Tipo 9 - El Pacificador", icon: CircleDot, description: "Receptivo, reconfortante, busca armonía" },
+    ],
+    otherPlaceholder: "Describe tu personalidad en tus propias palabras...",
+  },
+  {
+    id: "estres_reaccion",
+    type: "single-with-other",
+    title: "¿Cómo reaccionas ante el estrés?",
+    description: "Esto nos ayuda a entender qué tipo de ventures evitar para ti",
+    options: [
+      { value: "analizo", label: "Analizo y planifico", icon: Brain, description: "Me paralizo pensando demasiado" },
+      { value: "actuo", label: "Actúo rápido", icon: Zap, description: "Tomo decisiones impulsivas bajo presión" },
+      { value: "delego", label: "Busco ayuda", icon: Users, description: "Necesito hablarlo con alguien" },
+      { value: "evito", label: "Evito el conflicto", icon: CircleDot, description: "Me retraigo hasta que pasa" },
+      { value: "compito", label: "Compito más", icon: Target, description: "El estrés me motiva a ganar" },
+    ],
+    otherPlaceholder: "¿Cómo manejas el estrés de otra forma?",
+  },
+  {
+    id: "motivacion_profunda",
+    type: "single-with-other",
+    title: "¿Qué te mueve realmente?",
+    description: "La motivación que te hace levantarte a las 5am sin despertador",
+    options: [
+      { value: "libertad", label: "Libertad total", icon: Compass, description: "No tener jefes ni horarios" },
+      { value: "reconocimiento", label: "Reconocimiento", icon: Crown, description: "Ser visto como el mejor en algo" },
+      { value: "impacto", label: "Cambiar el mundo", icon: Heart, description: "Dejar un legado positivo" },
+      { value: "creacion", label: "Crear algo grande", icon: Lightbulb, description: "Construir desde cero" },
+      { value: "riqueza", label: "Riqueza", icon: BarChart3, description: "Generar abundancia económica" },
+      { value: "maestria", label: "Maestría", icon: Target, description: "Ser el mejor en lo que hago" },
+    ],
+    otherPlaceholder: "¿Qué otra motivación profunda tienes?",
+  },
+  
+  // === PERFIL EMPRENDEDOR ===
   {
     id: "entrepreneur_type",
-    type: "single",
+    type: "single-with-other",
     title: "What type of entrepreneur are you?",
-    description: "Select the description that fits you best",
+    description: "Select the description that fits you best, or describe your own style",
     options: [
-      {
-        value: "architect",
-        label: "The Architect",
-        icon: Brain,
-        description: "Designs systems, processes, frameworks. Obsessed with how pieces fit together.",
-      },
-      {
-        value: "creative",
-        label: "The Creative",
-        icon: Sparkles,
-        description: "Designs products, experiences, brands. Obsessed with making things feel incredible.",
-      },
-      {
-        value: "analyst",
-        label: "The Analyst",
-        icon: BarChart3,
-        description: "Data, metrics, optimization. Obsessed with finding patterns.",
-      },
-      {
-        value: "communicator",
-        label: "The Communicator",
-        icon: Users,
-        description: "Narrative, sales, community. Obsessed with connecting with people.",
-      },
-      {
-        value: "builder",
-        label: "The Builder",
-        icon: Zap,
-        description: "Code, infrastructure, making things work. Obsessed with building.",
-      },
+      { value: "architect", label: "The Architect", icon: Brain, description: "Designs systems, processes, frameworks. Obsessed with how pieces fit together." },
+      { value: "creative", label: "The Creative", icon: Sparkles, description: "Designs products, experiences, brands. Obsessed with making things feel incredible." },
+      { value: "analyst", label: "The Analyst", icon: BarChart3, description: "Data, metrics, optimization. Obsessed with finding patterns." },
+      { value: "communicator", label: "The Communicator", icon: Users, description: "Narrative, sales, community. Obsessed with connecting with people." },
+      { value: "builder", label: "The Builder", icon: Zap, description: "Code, infrastructure, making things work. Obsessed with building." },
     ],
+    otherPlaceholder: "Describe tu estilo emprendedor único...",
   },
   {
     id: "obsession",
-    type: "text",
+    type: "single-with-other",
     title: "What topic do you research without being asked?",
     description: "In your free time, before bed... what do you explore?",
-    placeholder: "e.g., The intersection of AI and healthcare, or how D2C brands grow on TikTok",
+    options: [
+      { value: "ai_tech", label: "IA y tecnología", icon: Brain, description: "Nuevos modelos, herramientas, posibilidades" },
+      { value: "consumer_behavior", label: "Comportamiento del consumidor", icon: Users, description: "Por qué la gente compra lo que compra" },
+      { value: "market_trends", label: "Tendencias de mercado", icon: BarChart3, description: "Lo que viene, oportunidades emergentes" },
+      { value: "product_design", label: "Diseño de producto", icon: Sparkles, description: "Cómo hacer cosas que la gente ame" },
+      { value: "business_models", label: "Modelos de negocio", icon: Target, description: "Cómo monetizar diferentes ideas" },
+    ],
+    otherPlaceholder: "¿Qué otro tema te obsesiona investigar?",
   },
   {
     id: "strengths",
-    type: "multi",
+    type: "multi-with-other",
     title: "Select your top 3 strengths",
-    description: "Where do you excel the most?",
+    description: "Where do you excel the most? Choose up to 3, or add your own",
     maxSelections: 3,
     options: [
       { value: "systemic_thinking", label: "Systemic thinking" },
@@ -95,12 +148,13 @@ const questions: Question[] = [
       { value: "leadership", label: "Leadership" },
       { value: "creativity", label: "Creativity & ideation" },
     ],
+    otherPlaceholder: "¿Otra fortaleza que tengas?",
   },
   {
     id: "drains",
-    type: "multi",
+    type: "multi-with-other",
     title: "What drains your energy?",
-    description: "What do you NOT want to do in your venture?",
+    description: "What do you NOT want to do in your venture? Choose up to 3",
     maxSelections: 3,
     options: [
       { value: "bureaucracy", label: "Bureaucratic management" },
@@ -114,52 +168,59 @@ const questions: Question[] = [
       { value: "accounting", label: "Accounting" },
       { value: "negotiations", label: "Long negotiations" },
     ],
+    otherPlaceholder: "¿Qué otra cosa te drena energía?",
   },
+  
+  // === CONTEXTO ===
   {
     id: "context",
-    type: "single",
+    type: "single-with-other",
     title: "What's your current situation?",
     options: [
       { value: "full_time", label: "Full-time available" },
       { value: "nights_weekends", label: "Nights and weekends" },
       { value: "few_hours", label: "Few hours per week" },
     ],
+    otherPlaceholder: "Describe tu situación específica...",
   },
   {
     id: "capital",
-    type: "single",
+    type: "single-with-other",
     title: "What's your capital situation?",
     options: [
       { value: "can_invest", label: "I can invest something" },
       { value: "bootstrapping", label: "Bootstrapping only" },
       { value: "has_funding", label: "I have access to funding" },
     ],
+    otherPlaceholder: "¿Tu situación de capital es diferente?",
   },
   {
     id: "team",
-    type: "single",
+    type: "single-with-other",
     title: "What's your team status?",
     options: [
       { value: "solo", label: "Solo founder" },
       { value: "cofounder", label: "With technical cofounder" },
       { value: "small_team", label: "Small team" },
     ],
+    otherPlaceholder: "Describe tu equipo...",
   },
   {
     id: "tech_skills",
-    type: "single",
+    type: "single-with-other",
     title: "Your technical skills?",
     options: [
       { value: "can_code", label: "I can code" },
       { value: "no_code", label: "I use no-code tools" },
       { value: "need_technical", label: "I need a technical partner" },
     ],
+    otherPlaceholder: "Describe tus habilidades técnicas...",
   },
   {
     id: "industries",
-    type: "multi",
+    type: "multi-with-other",
     title: "Industries you've worked in?",
-    description: "Select all that apply",
+    description: "Select all that apply, or add your own",
     maxSelections: 5,
     options: [
       { value: "fintech", label: "Fintech" },
@@ -175,35 +236,20 @@ const questions: Question[] = [
       { value: "travel", label: "Travel" },
       { value: "beauty", label: "Beauty" },
       { value: "gaming", label: "Gaming" },
-      { value: "other", label: "Other" },
     ],
+    otherPlaceholder: "¿Otra industria en la que tengas experiencia?",
   },
   {
     id: "ambition",
-    type: "single",
+    type: "single-with-other",
     title: "What type of venture attracts you?",
     options: [
-      {
-        value: "scale_massive",
-        label: "Massive scale",
-        description: "I want to build something that reaches millions",
-      },
-      {
-        value: "niche_profitable",
-        label: "Profitable niche",
-        description: "I prefer a small but highly profitable business",
-      },
-      {
-        value: "impact_social",
-        label: "Social impact",
-        description: "I want to solve a real world problem",
-      },
-      {
-        value: "experiment",
-        label: "Experiment",
-        description: "I want to learn and validate, failure is OK",
-      },
+      { value: "scale_massive", label: "Massive scale", description: "I want to build something that reaches millions" },
+      { value: "niche_profitable", label: "Profitable niche", description: "I prefer a small but highly profitable business" },
+      { value: "impact_social", label: "Social impact", description: "I want to solve a real world problem" },
+      { value: "experiment", label: "Experiment", description: "I want to learn and validate, failure is OK" },
     ],
+    otherPlaceholder: "Describe tu ambición...",
   },
 ];
 
@@ -211,20 +257,39 @@ export default function DiscoverPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [otherText, setOtherText] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentQuestion = questions[currentStep];
   const progress = ((currentStep + 1) / questions.length) * 100;
 
   const handleSingleSelect = (value: string) => {
-    setAnswers({ ...answers, [currentQuestion.id]: value });
+    if (value === "__other__") {
+      // Selected "other", keep selection but wait for text input
+      setAnswers({ ...answers, [currentQuestion.id]: "__other__" });
+    } else {
+      setAnswers({ ...answers, [currentQuestion.id]: value });
+    }
   };
 
   const handleMultiSelect = (value: string) => {
     const current = (answers[currentQuestion.id] as string[]) || [];
     const maxSelections = currentQuestion.maxSelections || 3;
     
-    if (current.includes(value)) {
+    if (value === "__other__") {
+      // Toggle "other" selection
+      if (current.includes("__other__")) {
+        setAnswers({
+          ...answers,
+          [currentQuestion.id]: current.filter((v) => v !== "__other__"),
+        });
+      } else if (current.length < maxSelections) {
+        setAnswers({
+          ...answers,
+          [currentQuestion.id]: [...current, "__other__"],
+        });
+      }
+    } else if (current.includes(value)) {
       setAnswers({
         ...answers,
         [currentQuestion.id]: current.filter((v) => v !== value),
@@ -237,23 +302,51 @@ export default function DiscoverPage() {
     }
   };
 
-  const handleTextChange = (value: string) => {
-    setAnswers({ ...answers, [currentQuestion.id]: value });
+  const handleOtherTextChange = (value: string) => {
+    setOtherText({ ...otherText, [currentQuestion.id]: value });
+  };
+
+  const getCurrentAnswer = () => {
+    const rawAnswer = answers[currentQuestion.id];
+    const otherValue = otherText[currentQuestion.id];
+    
+    if (currentQuestion.type === "single-with-other" && rawAnswer === "__other__") {
+      return otherValue?.trim() || null;
+    }
+    
+    if (currentQuestion.type === "multi-with-other") {
+      const selections = (rawAnswer as string[]) || [];
+      const hasOther = selections.includes("__other__");
+      const cleanSelections = selections.filter(s => s !== "__other__");
+      
+      if (hasOther && otherValue?.trim()) {
+        return [...cleanSelections, otherValue.trim()];
+      }
+      return cleanSelections.length > 0 ? cleanSelections : null;
+    }
+    
+    return rawAnswer;
   };
 
   const canProceed = () => {
-    const answer = answers[currentQuestion.id];
-    if (currentQuestion.type === "single") return !!answer;
-    if (currentQuestion.type === "multi") return (answer as string[])?.length > 0;
-    if (currentQuestion.type === "text") return (answer as string)?.trim().length > 0;
-    return false;
+    const answer = getCurrentAnswer();
+    if (!answer) return false;
+    
+    if (Array.isArray(answer)) {
+      return answer.length > 0;
+    }
+    
+    return typeof answer === "string" && answer.length > 0;
   };
 
   const handleNext = () => {
+    const finalAnswer = getCurrentAnswer();
+    
     if (currentStep < questions.length - 1) {
+      setAnswers({ ...answers, [currentQuestion.id]: finalAnswer });
       setCurrentStep(currentStep + 1);
     } else {
-      handleSubmit();
+      handleSubmit(finalAnswer);
     }
   };
 
@@ -263,19 +356,36 @@ export default function DiscoverPage() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (finalAnswer: any) => {
     setIsSubmitting(true);
     
+    const finalAnswers = { ...answers, [currentQuestion.id]: finalAnswer };
+    
     try {
-      // Store answers in localStorage for the results page
-      localStorage.setItem("ventureGates_answers", JSON.stringify(answers));
-      
-      // Navigate to processing/results page
+      localStorage.setItem("ventureGates_answers", JSON.stringify(finalAnswers));
       router.push("/discover/processing");
     } catch (error) {
       console.error("Error:", error);
       setIsSubmitting(false);
     }
+  };
+
+  const isOtherSelected = () => {
+    if (currentQuestion.type === "single-with-other") {
+      return answers[currentQuestion.id] === "__other__";
+    }
+    if (currentQuestion.type === "multi-with-other") {
+      return (answers[currentQuestion.id] as string[])?.includes("__other__");
+    }
+    return false;
+  };
+
+  const getSelectedCount = () => {
+    if (currentQuestion.type === "multi-with-other") {
+      const arr = (answers[currentQuestion.id] as string[]) || [];
+      return arr.length;
+    }
+    return answers[currentQuestion.id] ? 1 : 0;
   };
 
   return (
@@ -316,8 +426,8 @@ export default function DiscoverPage() {
                   <p className="text-neutral-600 mb-6">{currentQuestion.description}</p>
                 )}
 
-                {/* Single Select */}
-                {currentQuestion.type === "single" && currentQuestion.options && (
+                {/* Single Select with Other */}
+                {(currentQuestion.type === "single" || currentQuestion.type === "single-with-other") && (
                   <div className="space-y-3">
                     {currentQuestion.options.map((option) => {
                       const Icon = option.icon;
@@ -353,11 +463,46 @@ export default function DiscoverPage() {
                         </button>
                       );
                     })}
+                    
+                    {/* Other option */}
+                    {currentQuestion.type === "single-with-other" && (
+                      <>
+                        <button
+                          onClick={() => handleSingleSelect("__other__")}
+                          className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                            isOtherSelected()
+                              ? "border-neutral-900 bg-neutral-900 text-white"
+                              : "border-neutral-200 hover:border-neutral-400 bg-white text-neutral-900"
+                          }`}
+                        >
+                          <div className="font-semibold flex items-center gap-2">
+                            <span>✏️</span>
+                            <span>Otro (especificar)</span>
+                          </div>
+                        </button>
+                        
+                        {isOtherSelected() && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            className="mt-3"
+                          >
+                            <Input
+                              value={otherText[currentQuestion.id] || ""}
+                              onChange={(e) => handleOtherTextChange(e.target.value)}
+                              placeholder={currentQuestion.otherPlaceholder}
+                              className="w-full"
+                              autoFocus
+                            />
+                          </motion.div>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
 
-                {/* Multi Select */}
-                {currentQuestion.type === "multi" && currentQuestion.options && (
+                {/* Multi Select with Other */}
+                {(currentQuestion.type === "multi" || currentQuestion.type === "multi-with-other") && (
                   <div>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {currentQuestion.options.map((option) => {
@@ -377,22 +522,42 @@ export default function DiscoverPage() {
                           </button>
                         );
                       })}
+                      
+                      {/* Other option chip */}
+                      {currentQuestion.type === "multi-with-other" && (
+                        <button
+                          onClick={() => handleMultiSelect("__other__")}
+                          className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-all ${
+                            isOtherSelected()
+                              ? "border-neutral-900 bg-neutral-900 text-white"
+                              : "border-neutral-200 hover:border-neutral-400 bg-white text-neutral-700"
+                          }`}
+                        >
+                          ✏️ Otro
+                        </button>
+                      )}
                     </div>
+                    
+                    {currentQuestion.type === "multi-with-other" && isOtherSelected() && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="mb-4"
+                      >
+                        <Input
+                          value={otherText[currentQuestion.id] || ""}
+                          onChange={(e) => handleOtherTextChange(e.target.value)}
+                          placeholder={currentQuestion.otherPlaceholder}
+                          className="w-full"
+                          autoFocus
+                        />
+                      </motion.div>
+                    )}
+                    
                     <p className="text-sm text-neutral-500">
-                      Selected: {((answers[currentQuestion.id] as string[]) || []).length} / {currentQuestion.maxSelections}
+                      Selected: {getSelectedCount()} / {currentQuestion.maxSelections}
                     </p>
                   </div>
-                )}
-
-                {/* Text Input */}
-                {currentQuestion.type === "text" && (
-                  <textarea
-                    value={(answers[currentQuestion.id] as string) || ""}
-                    onChange={(e) => handleTextChange(e.target.value)}
-                    placeholder={currentQuestion.placeholder}
-                    rows={4}
-                    className="w-full p-4 rounded-xl border-2 border-neutral-200 focus:border-neutral-900 focus:outline-none resize-none"
-                  />
                 )}
               </CardContent>
             </Card>
