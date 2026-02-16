@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
+  AlertCircle,
   Compass,
   Flame,
   Heart,
@@ -54,10 +55,7 @@ interface Question {
   maxSelections?: number;
 }
 
-// ORGANIC FLOW: Deep founder assessment
-// Psychological → Practical → Psychological → Practical → Conclusion
 const questions: Question[] = [
-  // === OPENING: CORE IDENTITY ===
   {
     id: "archetype",
     type: "single-with-other",
@@ -74,8 +72,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "Describe your unique archetype in your own words...",
   },
-  
-  // === DEPTH: ENEAGRAM ===
   {
     id: "eneagram",
     type: "single-with-other",
@@ -92,8 +88,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "Describe your core driver another way...",
   },
-  
-  // === PRACTICAL: CURRENT REALITY ===
   {
     id: "availability",
     type: "single-with-other",
@@ -108,8 +102,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "Describe your specific situation...",
   },
-  
-  // === DEPTH: STRESS PATTERN ===
   {
     id: "stress_response",
     type: "single-with-other",
@@ -125,8 +117,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "How do you react under pressure?",
   },
-  
-  // === DEPTH: CORE MOTIVATION ===
   {
     id: "motivation",
     type: "single-with-other",
@@ -143,8 +133,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "What REALLY moves you?",
   },
-  
-  // === PRACTICAL: CAPITAL ===
   {
     id: "runway",
     type: "single-with-other",
@@ -158,8 +146,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "Describe your capital situation...",
   },
-  
-  // === DEPTH: OBSESSION ===
   {
     id: "obsession",
     type: "text",
@@ -168,8 +154,6 @@ const questions: Question[] = [
     description: "The topic you consume on YouTube at 2am, the books you buy and don't read, the podcasts you listen to while walking",
     placeholder: "Ex: 'How blockchain is changing music IP rights' or 'Color psychology in conversion rates'...",
   },
-  
-  // === DEPTH: SUPERPOWERS ===
   {
     id: "strengths",
     type: "multi-with-other",
@@ -193,8 +177,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "Any superpower not on the list?",
   },
-  
-  // === DEPTH: KRYPTONITE ===
   {
     id: "drains",
     type: "multi-with-other",
@@ -216,8 +198,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "What else completely drains you?",
   },
-  
-  // === PRACTICAL: TECHNICAL SKILLS ===
   {
     id: "technical",
     type: "single-with-other",
@@ -232,8 +212,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "Describe your specific technical skills...",
   },
-  
-  // === PRACTICAL: TEAM ===
   {
     id: "team",
     type: "single-with-other",
@@ -248,8 +226,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "Describe your team situation...",
   },
-  
-  // === DEPTH: DOMAIN EXPERTISE ===
   {
     id: "industries",
     type: "multi-with-other",
@@ -273,8 +249,6 @@ const questions: Question[] = [
     ],
     otherPlaceholder: "Another sector where you have expertise?",
   },
-  
-  // === CLOSING: SUCCESS VISION ===
   {
     id: "success",
     type: "single-with-other",
@@ -292,126 +266,152 @@ const questions: Question[] = [
   },
 ];
 
+const STORAGE_KEY = "ventureGates_answers_v1";
+const STORAGE_STEP_KEY = "ventureGates_current_step";
+
 export default function DiscoverPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [otherText, setOtherText] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  const currentQuestion = questions[currentStep];
+  // Load saved progress
+  useEffect(() => {
+    setIsClient(true);
+    try {
+      const savedAnswers = localStorage.getItem(STORAGE_KEY);
+      const savedStep = localStorage.getItem(STORAGE_STEP_KEY);
+      
+      if (savedAnswers) {
+        setAnswers(JSON.parse(savedAnswers));
+      }
+      if (savedStep) {
+        const step = parseInt(savedStep, 10);
+        if (step >= 0 && step < questions.length) {
+          setCurrentStep(step);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading progress:", err);
+    }
+  }, []);
+
+  // Save progress
+  useEffect(() => {
+    if (!isClient) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+      localStorage.setItem(STORAGE_STEP_KEY, currentStep.toString());
+    } catch (err) {
+      console.error("Error saving:", err);
+    }
+  }, [answers, currentStep, isClient]);
+
+  const currentQuestion = useMemo(() => questions[currentStep], [currentStep]);
   const progress = ((currentStep + 1) / questions.length) * 100;
 
-  const handleSingleSelect = (value: string) => {
-    if (value === "__other__") {
-      setAnswers({ ...answers, [currentQuestion.id]: "__other__" });
-    } else {
-      setAnswers({ ...answers, [currentQuestion.id]: value });
-    }
-  };
+  const handleSingleSelect = useCallback((value: string) => {
+    setError(null);
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
+  }, [currentQuestion.id]);
 
-  const handleMultiSelect = (value: string) => {
+  const handleMultiSelect = useCallback((value: string) => {
+    setError(null);
     const current = (answers[currentQuestion.id] as string[]) || [];
-    const maxSelections = currentQuestion.maxSelections || 3;
+    const max = currentQuestion.maxSelections || 3;
     
     if (value === "__other__") {
       if (current.includes("__other__")) {
-        setAnswers({
-          ...answers,
-          [currentQuestion.id]: current.filter((v) => v !== "__other__"),
-        });
-      } else if (current.length < maxSelections) {
-        setAnswers({
-          ...answers,
-          [currentQuestion.id]: [...current, "__other__"],
-        });
+        setAnswers((prev) => ({ ...prev, [currentQuestion.id]: current.filter((v) => v !== "__other__") }));
+        setOtherText((prev) => ({ ...prev, [currentQuestion.id]: "" }));
+      } else if (current.length < max) {
+        setAnswers((prev) => ({ ...prev, [currentQuestion.id]: [...current, "__other__"] }));
       }
     } else if (current.includes(value)) {
-      setAnswers({
-        ...answers,
-        [currentQuestion.id]: current.filter((v) => v !== value),
-      });
-    } else if (current.length < maxSelections) {
-      setAnswers({
-        ...answers,
-        [currentQuestion.id]: [...current, value],
-      });
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: current.filter((v) => v !== value) }));
+    } else if (current.length < max) {
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: [...current, value] }));
     }
-  };
+  }, [answers, currentQuestion.id, currentQuestion.maxSelections]);
 
-  const handleTextChange = (value: string) => {
-    setAnswers({ ...answers, [currentQuestion.id]: value });
-  };
+  const handleTextChange = useCallback((value: string) => {
+    setError(null);
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
+  }, [currentQuestion.id]);
 
-  const handleOtherTextChange = (value: string) => {
-    setOtherText({ ...otherText, [currentQuestion.id]: value });
-  };
+  const handleOtherTextChange = useCallback((value: string) => {
+    setOtherText((prev) => ({ ...prev, [currentQuestion.id]: value }));
+  }, [currentQuestion.id]);
 
-  const getCurrentAnswer = () => {
-    const rawAnswer = answers[currentQuestion.id];
-    const otherValue = otherText[currentQuestion.id];
+  const getCurrentAnswer = useCallback(() => {
+    const raw = answers[currentQuestion.id];
+    const other = otherText[currentQuestion.id];
     
-    if (currentQuestion.type === "single-with-other" && rawAnswer === "__other__") {
-      return otherValue?.trim() || null;
+    if (currentQuestion.type === "single-with-other" && raw === "__other__") {
+      return other?.trim() || null;
     }
     
     if (currentQuestion.type === "multi-with-other") {
-      const selections = (rawAnswer as string[]) || [];
+      const selections = (raw as string[]) || [];
       const hasOther = selections.includes("__other__");
-      const cleanSelections = selections.filter(s => s !== "__other__");
+      const clean = selections.filter((s) => s !== "__other__");
       
-      if (hasOther && otherValue?.trim()) {
-        return [...cleanSelections, otherValue.trim()];
+      if (hasOther && other?.trim()) {
+        return [...clean, other.trim()];
       }
-      return cleanSelections.length > 0 ? cleanSelections : null;
+      return clean.length > 0 ? clean : null;
     }
     
-    return rawAnswer;
-  };
+    return raw;
+  }, [answers, otherText, currentQuestion.id, currentQuestion.type]);
 
-  const canProceed = () => {
+  const canProceed = useCallback(() => {
     const answer = getCurrentAnswer();
     if (!answer) return false;
-    
-    if (Array.isArray(answer)) {
-      return answer.length > 0;
-    }
-    
+    if (Array.isArray(answer)) return answer.length > 0;
     return typeof answer === "string" && answer.length > 0;
-  };
+  }, [getCurrentAnswer]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     const finalAnswer = getCurrentAnswer();
     
     if (currentStep < questions.length - 1) {
-      setAnswers({ ...answers, [currentQuestion.id]: finalAnswer });
-      setCurrentStep(currentStep + 1);
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: finalAnswer }));
+      setCurrentStep((prev) => prev + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       handleSubmit(finalAnswer);
     }
-  };
+  }, [currentStep, currentQuestion.id, getCurrentAnswer]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      setCurrentStep((prev) => prev - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  };
+  }, [currentStep]);
 
-  const handleSubmit = async (finalAnswer: any) => {
+  const handleSubmit = useCallback(async (finalAnswer: any) => {
     setIsSubmitting(true);
+    setError(null);
     
     const finalAnswers = { ...answers, [currentQuestion.id]: finalAnswer };
     
     try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_STEP_KEY);
       localStorage.setItem("ventureGates_answers", JSON.stringify(finalAnswers));
       router.push("/discover/processing");
-    } catch (error) {
-      console.error("Error:", error);
+    } catch (err) {
+      setError("Failed to save. Please try again.");
       setIsSubmitting(false);
     }
-  };
+  }, [answers, currentQuestion.id, router]);
 
-  const isOtherSelected = () => {
+  const isOtherSelected = useCallback(() => {
     if (currentQuestion.type === "single-with-other") {
       return answers[currentQuestion.id] === "__other__";
     }
@@ -419,34 +419,82 @@ export default function DiscoverPage() {
       return (answers[currentQuestion.id] as string[])?.includes("__other__");
     }
     return false;
-  };
+  }, [answers, currentQuestion.type, currentQuestion.id]);
 
-  const getSelectedCount = () => {
+  const getSelectedCount = useCallback(() => {
     if (currentQuestion.type === "multi-with-other") {
       const arr = (answers[currentQuestion.id] as string[]) || [];
-      return arr.filter(v => v !== "__other__").length;
+      return arr.filter((v) => v !== "__other__").length;
     }
     return answers[currentQuestion.id] && answers[currentQuestion.id] !== "__other__" ? 1 : 0;
-  };
+  }, [answers, currentQuestion.type, currentQuestion.id]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && canProceed() && !isSubmitting) {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [canProceed, isSubmitting, handleNext]);
+
+  if (!isClient) {
+    return (
+      <main className="min-h-screen dot-pattern-bg py-8 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-neutral-200 rounded w-1/4"></div>
+            <div className="h-64 bg-white rounded-lg"></div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen dot-pattern-bg py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <Link href="/" className="text-sm text-neutral-500 hover:text-neutral-900 mb-4 inline-flex items-center gap-1">
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Link>
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/" className="text-sm text-neutral-500 hover:text-neutral-900 inline-flex items-center gap-1">
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Link>
+            {(currentStep > 0 || Object.keys(answers).length > 0) && (
+              <button
+                onClick={() => {
+                  if (confirm("Start over? All progress will be lost.")) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    localStorage.removeItem(STORAGE_STEP_KEY);
+                    setAnswers({});
+                    setOtherText({});
+                    setCurrentStep(0);
+                  }
+                }}
+                className="text-xs text-neutral-400 hover:text-red-500"
+              >
+                Start over
+              </button>
+            )}
+          </div>
+          
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-neutral-500">
-              {currentStep + 1} / {questions.length}
-            </span>
-            <span className="text-sm font-medium text-neutral-900">
-              {Math.round(progress)}%
-            </span>
+            <span className="text-sm text-neutral-500">{currentStep + 1} / {questions.length}</span>
+            <span className="text-sm font-medium text-neutral-900">{Math.round(progress)}%</span>
           </div>
           <Progress value={progress} className="h-2" />
+          
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
         </div>
 
         {/* Question Card */}
@@ -467,9 +515,7 @@ export default function DiscoverPage() {
                       {currentQuestion.subtitle}
                     </span>
                   )}
-                  <h2 className="text-2xl font-bold text-neutral-900 mt-1">
-                    {currentQuestion.title}
-                  </h2>
+                  <h2 className="text-2xl font-bold text-neutral-900 mt-1">{currentQuestion.title}</h2>
                   {currentQuestion.description && (
                     <p className="text-neutral-600 mt-2 text-sm">{currentQuestion.description}</p>
                   )}
@@ -513,7 +559,6 @@ export default function DiscoverPage() {
                       );
                     })}
                     
-                    {/* Other option */}
                     {currentQuestion.type === "single-with-other" && (
                       <>
                         <button
@@ -572,7 +617,6 @@ export default function DiscoverPage() {
                         );
                       })}
                       
-                      {/* Other option chip */}
                       {currentQuestion.type === "multi-with-other" && (
                         <button
                           onClick={() => handleMultiSelect("__other__")}
@@ -603,9 +647,7 @@ export default function DiscoverPage() {
                       </motion.div>
                     )}
                     
-                    <p className="text-sm text-neutral-500">
-                      Selected: {getSelectedCount()} / {currentQuestion.maxSelections}
-                    </p>
+                    <p className="text-sm text-neutral-500">Selected: {getSelectedCount()} / {currentQuestion.maxSelections}</p>
                   </div>
                 )}
 
@@ -660,6 +702,10 @@ export default function DiscoverPage() {
             )}
           </Button>
         </div>
+        
+        <p className="mt-4 text-center text-xs text-neutral-400">
+          Press Cmd/Ctrl + Enter to continue
+        </p>
       </div>
     </main>
   );
