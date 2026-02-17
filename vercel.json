@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "app/api/generate-venture-dna/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/generate-ventures/route.ts": {
+      "maxDuration": 45
+    },
+    "app/api/generate-profile/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

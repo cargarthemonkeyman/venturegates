@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Star, Zap, Shield, Award, CheckCircle2, Globe, Rocket, Brain, Wallet, ArrowUpRight, ArrowDownRight, Minus, Lightbulb, Search, Calendar, DollarSign, BarChart3, PieChart, Target } from "lucide-react";
+import { ArrowLeft, Loader2, Star, Zap, Shield, Award, CheckCircle2, Globe, Rocket, Brain, Wallet, ArrowUpRight, ArrowDownRight, Minus, Lightbulb, Search, Calendar, DollarSign, BarChart3, PieChart, Target, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, CartesianGrid } from "recharts";
 

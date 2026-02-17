@@ -666,6 +666,7 @@ export default function DiscoverPage() {
                         onChange={handleSliderChange}
                         min={(currentQuestion as SliderQuestion).slider.min}
                         max={(currentQuestion as SliderQuestion).slider.max}
+                        step={1}
                       />
                     </div>
                     
