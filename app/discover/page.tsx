@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { Slider } from "@/components/ui/slider";
 import {
   ArrowRight,
   ArrowLeft,
@@ -31,6 +32,7 @@ import {
   Users,
   Zap,
   Brain,
+  SlidersHorizontal,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -55,7 +57,70 @@ interface Question {
   maxSelections?: number;
 }
 
-const questions: Question[] = [
+interface SliderOption {
+  min: number;
+  max: number;
+  minLabel: string;
+  maxLabel: string;
+  minDescription: string;
+  maxDescription: string;
+}
+
+interface SliderQuestion extends Omit<Question, "type" | "options"> {
+  type: "slider";
+  slider: SliderOption;
+}
+
+type AllQuestionTypes = Question | SliderQuestion;
+
+const questions: AllQuestionTypes[] = [
+  // === 16PERSONALITIES DIMENSIONS (3 preguntas con sliders) ===
+  {
+    id: "structure_chaos",
+    type: "slider",
+    title: "Estructura vs Caos",
+    subtitle: "Tu estilo de trabajo preferido",
+    description: "¿Cómo prefieres organizar tu trabajo diario?",
+    slider: {
+      min: 0,
+      max: 10,
+      minLabel: "Rutinas claras",
+      maxLabel: "Improvisación total",
+      minDescription: "Procesos definidos, horarios fijos, planificación detallada",
+      maxDescription: "Flexibilidad total, adaptación en tiempo real, sin plan rígido"
+    }
+  },
+  {
+    id: "risk_security",
+    type: "slider",
+    title: "Riesgo vs Seguridad",
+    subtitle: "Tu tolerancia al riesgo empresarial",
+    description: "Ante una decisión importante de negocio, ¿qué priorizas?",
+    slider: {
+      min: 0,
+      max: 10,
+      minLabel: "Minimizar riesgo",
+      maxLabel: "Apostar alto",
+      minDescription: "Paso seguro, validación previa, pérdidas mínimas posibles",
+      maxDescription: "Alto retorno potencial, primero en el mercado, asumo el riesgo"
+    }
+  },
+  {
+    id: "individual_tribal",
+    type: "slider",
+    title: "Individual vs Tribal",
+    subtitle: "¿De dónde viene tu energía laboral?",
+    description: "¿En qué entorno te sientes más productivo y energizado?",
+    slider: {
+      min: 0,
+      max: 10,
+      minLabel: "Trabajo solitario",
+      maxLabel: "Colaboración constante",
+      minDescription: "Focus profundo, trabajo individual, mínimas distracciones",
+      maxDescription: "Brainstorming en equipo, energía grupal, colaboración continua"
+    }
+  },
+  // === PREGUNTAS ORIGINALES ===
   {
     id: "archetype",
     type: "single-with-other",
@@ -310,7 +375,7 @@ export default function DiscoverPage() {
     }
   }, [answers, currentStep, isClient]);
 
-  const currentQuestion = useMemo(() => questions[currentStep], [currentStep]);
+  const currentQuestion = useMemo(() => questions[currentStep], [currentStep]) as AllQuestionTypes;
   const progress = ((currentStep + 1) / questions.length) * 100;
 
   // Submit handler (defined early for use in single select)
@@ -339,6 +404,7 @@ export default function DiscoverPage() {
 
   const handleSingleSelect = useCallback((value: string) => {
     setError(null);
+    const q = currentQuestion as AllQuestionTypes;
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
     
     // Auto-advance for single select (but not for "Other" option)
@@ -353,12 +419,12 @@ export default function DiscoverPage() {
         }
       }, 300);
     }
-  }, [currentQuestion.id, currentQuestion.type, currentStep, goToNext, answers, handleSubmitFromAnswers]);
+  }, [currentQuestion, currentStep, goToNext, answers, handleSubmitFromAnswers]);
 
   const handleMultiSelect = useCallback((value: string) => {
     setError(null);
     const current = (answers[currentQuestion.id] as string[]) || [];
-    const max = currentQuestion.maxSelections || 3;
+    const max = (currentQuestion as Question).maxSelections || 3;
     
     if (value === "__other__") {
       if (current.includes("__other__")) {
@@ -372,11 +438,16 @@ export default function DiscoverPage() {
     } else if (current.length < max) {
       setAnswers((prev) => ({ ...prev, [currentQuestion.id]: [...current, value] }));
     }
-  }, [answers, currentQuestion.id, currentQuestion.maxSelections]);
+  }, [answers, currentQuestion]);
 
   const handleTextChange = useCallback((value: string) => {
     setError(null);
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value }));
+  }, [currentQuestion.id]);
+
+  const handleSliderChange = useCallback((value: number) => {
+    setError(null);
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: value.toString() }));
   }, [currentQuestion.id]);
 
   const handleOtherTextChange = useCallback((value: string) => {
@@ -386,12 +457,18 @@ export default function DiscoverPage() {
   const getCurrentAnswer = useCallback(() => {
     const raw = answers[currentQuestion.id];
     const other = otherText[currentQuestion.id];
+    const q = currentQuestion as AllQuestionTypes;
     
-    if (currentQuestion.type === "single-with-other" && raw === "__other__") {
+    if (q.type === "slider") {
+      // Slider debe tener un valor por defecto si no está seteado
+      return raw !== undefined ? raw : "5";
+    }
+    
+    if (q.type === "single-with-other" && raw === "__other__") {
       return other?.trim() || null;
     }
     
-    if (currentQuestion.type === "multi-with-other") {
+    if (q.type === "multi-with-other") {
       const selections = (raw as string[]) || [];
       const hasOther = selections.includes("__other__");
       const clean = selections.filter((s) => s !== "__other__");
@@ -403,14 +480,21 @@ export default function DiscoverPage() {
     }
     
     return raw;
-  }, [answers, otherText, currentQuestion.id, currentQuestion.type]);
+  }, [answers, otherText, currentQuestion.id, currentQuestion]);
 
   const canProceed = useCallback(() => {
     const answer = getCurrentAnswer();
+    const q = currentQuestion as AllQuestionTypes;
+    
+    // Slider siempre tiene valor (default 5)
+    if (q.type === "slider") {
+      return true;
+    }
+    
     if (!answer) return false;
     if (Array.isArray(answer)) return answer.length > 0;
     return typeof answer === "string" && answer.length > 0;
-  }, [getCurrentAnswer]);
+  }, [getCurrentAnswer, currentQuestion]);
 
   const handleNext = useCallback(() => {
     const finalAnswer = getCurrentAnswer();
@@ -436,22 +520,26 @@ export default function DiscoverPage() {
   }, [answers, currentQuestion.id, handleSubmitFromAnswers]);
 
   const isOtherSelected = useCallback(() => {
-    if (currentQuestion.type === "single-with-other") {
+    const q = currentQuestion as AllQuestionTypes;
+    if (q.type === "slider") return false;
+    if (q.type === "single-with-other") {
       return answers[currentQuestion.id] === "__other__";
     }
-    if (currentQuestion.type === "multi-with-other") {
+    if (q.type === "multi-with-other") {
       return (answers[currentQuestion.id] as string[])?.includes("__other__");
     }
     return false;
-  }, [answers, currentQuestion.type, currentQuestion.id]);
+  }, [answers, currentQuestion]);
 
   const getSelectedCount = useCallback(() => {
-    if (currentQuestion.type === "multi-with-other") {
+    const q = currentQuestion as AllQuestionTypes;
+    if (q.type === "slider") return 0;
+    if (q.type === "multi-with-other") {
       const arr = (answers[currentQuestion.id] as string[]) || [];
       return arr.filter((v) => v !== "__other__").length;
     }
     return answers[currentQuestion.id] && answers[currentQuestion.id] !== "__other__" ? 1 : 0;
-  }, [answers, currentQuestion.type, currentQuestion.id]);
+  }, [answers, currentQuestion]);
 
   if (!isClient) {
     return (
@@ -466,8 +554,10 @@ export default function DiscoverPage() {
     );
   }
 
-  const isSingleSelect = currentQuestion.type === "single" || currentQuestion.type === "single-with-other";
-  const showNavigation = !isSingleSelect || isOtherSelected();
+  const qType = (currentQuestion as AllQuestionTypes).type;
+  const isSingleSelect = qType === "single" || qType === "single-with-other";
+  const isSlider = qType === "slider";
+  const showNavigation = !isSingleSelect || isOtherSelected() || isSlider;
 
   return (
     <main className="min-h-screen dot-pattern-bg py-8 px-4">
@@ -535,10 +625,71 @@ export default function DiscoverPage() {
                   )}
                 </div>
 
+                {/* Slider Question (16Personalities) */}
+                {(currentQuestion as AllQuestionTypes).type === "slider" && (currentQuestion as SliderQuestion).slider && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-center gap-4 mb-6">
+                      <div className="text-center flex-1">
+                        <div className="w-12 h-12 rounded-xl bg-neutral-100 flex items-center justify-center mx-auto mb-2">
+                          <span className="text-xl">
+                            {(currentQuestion as SliderQuestion).slider.min <= 3 ? "📋" : "🎯"}
+                          </span>
+                        </div>
+                        <div className="font-semibold text-sm text-neutral-900">
+                          {(currentQuestion as SliderQuestion).slider.minLabel}
+                        </div>
+                        <div className="text-xs text-neutral-500 mt-1">
+                          {(currentQuestion as SliderQuestion).slider.minDescription}
+                        </div>
+                      </div>
+                      
+                      <div className="text-2xl text-neutral-300">←→</div>
+                      
+                      <div className="text-center flex-1">
+                        <div className="w-12 h-12 rounded-xl bg-neutral-100 flex items-center justify-center mx-auto mb-2">
+                          <span className="text-xl">
+                            {(currentQuestion as SliderQuestion).slider.max >= 7 ? "🌊" : "⚡"}
+                          </span>
+                        </div>
+                        <div className="font-semibold text-sm text-neutral-900">
+                          {(currentQuestion as SliderQuestion).slider.maxLabel}
+                        </div>
+                        <div className="text-xs text-neutral-500 mt-1">
+                          {(currentQuestion as SliderQuestion).slider.maxDescription}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="px-4 py-6 bg-neutral-50 rounded-xl">
+                      <Slider
+                        value={parseInt((answers[currentQuestion.id] as string) || "5", 10)}
+                        onChange={handleSliderChange}
+                        min={(currentQuestion as SliderQuestion).slider.min}
+                        max={(currentQuestion as SliderQuestion).slider.max}
+                      />
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-100">
+                        <SlidersHorizontal className="w-4 h-4 text-neutral-600" />
+                        <span className="text-sm text-neutral-600">
+                          Tu posición: <strong className="text-neutral-900">
+                            {parseInt((answers[currentQuestion.id] as string) || "5", 10) <= 3 
+                              ? (currentQuestion as SliderQuestion).slider.minLabel 
+                              : parseInt((answers[currentQuestion.id] as string) || "5", 10) >= 7 
+                                ? (currentQuestion as SliderQuestion).slider.maxLabel 
+                                : "Equilibrio"}
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Single Select with Other */}
-                {isSingleSelect && currentQuestion.options && (
+                {(currentQuestion as AllQuestionTypes).type !== "slider" && isSingleSelect && (currentQuestion as Question).options && (
                   <div className="space-y-3">
-                    {currentQuestion.options.map((option) => {
+                    {(currentQuestion as Question).options?.map((option) => {
                       const Icon = option.icon;
                       const isSelected = answers[currentQuestion.id] === option.value;
                       
@@ -610,10 +761,10 @@ export default function DiscoverPage() {
                 )}
 
                 {/* Multi Select with Other */}
-                {(currentQuestion.type === "multi" || currentQuestion.type === "multi-with-other") && currentQuestion.options && (
+                {(qType === "multi" || qType === "multi-with-other") && (currentQuestion as Question).options && (
                   <div>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {currentQuestion.options.map((option) => {
+                      {(currentQuestion as Question).options?.map((option) => {
                         const isSelected = (answers[currentQuestion.id] as string[])?.includes(option.value);
                         
                         return (
@@ -631,7 +782,7 @@ export default function DiscoverPage() {
                         );
                       })}
                       
-                      {currentQuestion.type === "multi-with-other" && (
+                      {qType === "multi-with-other" && (
                         <button
                           onClick={() => handleMultiSelect("__other__")}
                           className={`px-4 py-2 rounded-full border-2 text-sm font-medium transition-all ${
@@ -645,7 +796,7 @@ export default function DiscoverPage() {
                       )}
                     </div>
                     
-                    {currentQuestion.type === "multi-with-other" && isOtherSelected() && (
+                    {qType === "multi-with-other" && isOtherSelected() && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
@@ -666,7 +817,7 @@ export default function DiscoverPage() {
                 )}
 
                 {/* Text Input */}
-                {currentQuestion.type === "text" && (
+                {qType === "text" && (
                   <Textarea
                     value={(answers[currentQuestion.id] as string) || ""}
                     onChange={(e) => handleTextChange(e.target.value)}
