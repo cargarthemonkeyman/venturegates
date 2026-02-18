@@ -77,10 +77,14 @@ export default function ProcessingPage() {
       }
 
       const answers = JSON.parse(answersJson);
+      console.log("[Processing] Answers loaded:", answers);
+      console.log("[Processing] structure_chaos:", answers.structure_chaos);
+      console.log("[Processing] risk_security:", answers.risk_security);
+      console.log("[Processing] individual_tribal:", answers.individual_tribal);
 
       // Validate we have the required slider answers
       if (!answers.structure_chaos || !answers.risk_security || !answers.individual_tribal) {
-        console.warn("Missing key personality dimensions");
+        console.warn("[Processing] Missing key personality dimensions");
       }
 
       const response = await fetch("/api/generate-venture-dna", {

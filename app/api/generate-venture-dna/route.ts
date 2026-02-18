@@ -257,6 +257,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     answers = body.answers || {};
+    
+    console.log("[API] Received answers:", JSON.stringify(answers, null, 2));
+    console.log("[API] structure_chaos:", answers.structure_chaos);
+    console.log("[API] risk_security:", answers.risk_security);
+    console.log("[API] individual_tribal:", answers.individual_tribal);
 
     if (!answers || Object.keys(answers).length === 0) {
       return NextResponse.json({ error: "Missing answers" }, { status: 400 });

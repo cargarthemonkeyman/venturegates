@@ -253,15 +253,22 @@ export default function DNAResultsPage() {
     return isNaN(parsed) ? fallback : parsed;
   };
 
-  // Personality data for radar - prioritize answers from wizard, fallback to DNA or defaults
+  // Personality data for radar - CRITICAL: must use answers from wizard
+  console.log("[DNA Results] Building personalityData from answers:", answers);
+  console.log("[DNA Results] answers?.structure_chaos:", answers?.structure_chaos);
+  console.log("[DNA Results] answers?.risk_security:", answers?.risk_security);
+  console.log("[DNA Results] answers?.individual_tribal:", answers?.individual_tribal);
+  
   const personalityData = [
-    { label: "Structure", value: safeParseInt(answers?.structure_chaos ?? dna?.cognitive_profile?.structure_preference, 5) },
-    { label: "Risk", value: safeParseInt(answers?.risk_security ?? dna?.cognitive_profile?.risk_preference, 5) },
-    { label: "Individual", value: safeParseInt(answers?.individual_tribal ?? dna?.cognitive_profile?.individual_preference, 5) },
-    { label: "Vision", value: safeParseInt(answers?.vision_execution ?? dna?.cognitive_profile?.vision_score, 5) },
-    { label: "Innovation", value: safeParseInt(answers?.innovation_optimization ?? dna?.cognitive_profile?.innovation_score, 5) },
-    { label: "Speed", value: safeParseInt(answers?.speed_quality ?? dna?.cognitive_profile?.speed_score, 5) },
+    { label: "Structure", value: safeParseInt(answers?.structure_chaos, 5) },
+    { label: "Risk", value: safeParseInt(answers?.risk_security, 5) },
+    { label: "Individual", value: safeParseInt(answers?.individual_tribal, 5) },
+    { label: "Vision", value: safeParseInt(answers?.vision_execution, 5) },
+    { label: "Innovation", value: safeParseInt(answers?.innovation_optimization, 5) },
+    { label: "Speed", value: safeParseInt(answers?.speed_quality, 5) },
   ];
+  
+  console.log("[DNA Results] personalityData:", personalityData);
 
   const descriptionBullets = parseDescriptionToBullets(archetype.description);
 
@@ -287,6 +294,11 @@ export default function DNAResultsPage() {
         </div>
       </div>
     );
+  }
+  
+  // DEBUG: Show warning if answers are missing
+  if (!answers || !answers.structure_chaos) {
+    console.warn("[DNA Results] WARNING: Wizard answers not found! Using defaults.");
   }
 
   return (
