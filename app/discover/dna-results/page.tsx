@@ -106,6 +106,10 @@ export default function DNAResultsPage() {
   const [answers, setAnswers] = useState<any>(null);
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
+  
+  // ALL hooks must be before any conditional returns
+  const heroRef = useRef<HTMLDivElement>(null);
+  const isHeroInView = useInView(heroRef, { once: true });
 
   useEffect(() => {
     const savedDNA = localStorage.getItem(DNA_KEY);
@@ -133,30 +137,7 @@ export default function DNAResultsPage() {
     setLoading(false);
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5]">
-        <motion.div className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <div className="w-12 h-12 border-2 border-neutral-400 border-t-neutral-800 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-600">Loading your profile...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (!dna) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5]">
-        <div className="text-center bg-white p-12 rounded-2xl border border-neutral-200 shadow-sm">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-neutral-900 mb-2">Profile Not Found</h2>
-          <Button onClick={() => router.push("/discover")} className="mt-4 bg-neutral-900">Take Assessment</Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Extract all DNA data with deep fallbacks
+  // Extract all DNA data with deep fallbacks (moved before early returns)
   const archetype = dna?.archetype || {};
   const cognitive = dna?.cognitive_profile || {};
   const edge = dna?.the_edge || {};
@@ -211,8 +192,30 @@ export default function DNAResultsPage() {
   ];
 
   const descriptionBullets = parseDescriptionToBullets(archetype.description);
-  const heroRef = useRef<HTMLDivElement>(null);
-  const isHeroInView = useInView(heroRef, { once: true });
+
+  // NOW the conditional returns (after all hooks)
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5]">
+        <motion.div className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div className="w-12 h-12 border-2 border-neutral-400 border-t-neutral-800 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-neutral-600">Loading your profile...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!dna) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5]">
+        <div className="text-center bg-white p-12 rounded-2xl border border-neutral-200 shadow-sm">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-neutral-900 mb-2">Profile Not Found</h2>
+          <Button onClick={() => router.push("/discover")} className="mt-4 bg-neutral-900">Take Assessment</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] text-neutral-900 overflow-x-hidden">
