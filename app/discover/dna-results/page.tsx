@@ -338,15 +338,19 @@ export default function DNAResultsPage() {
                 Founder DNA Analysis
               </span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 text-gray-900">
-              {dna?.archetype?.name || "Loading..."}
+            {/* DEBUG: Mostrar datos crudos */}
+            <div className="hidden">
+              DEBUG: {JSON.stringify(dna?.archetype)}
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold mb-4" style={{ color: '#000000' }}>
+              {dna?.archetype?.name}
             </h1>
-            <p className="text-xl md:text-2xl text-gray-500 max-w-2xl mx-auto mb-6">
-              {dna?.archetype?.tagline || "Complete the wizard to see your profile"}
+            <p className="text-xl md:text-2xl max-w-2xl mx-auto mb-6" style={{ color: '#555555' }}>
+              {dna?.archetype?.tagline}
             </p>
             {/* Descripción del arquetipo */}
-            <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              {dna?.archetype?.description || "Your founder DNA emerges from a unique combination of structure preference, risk appetite, and collaboration orientation."}
+            <p className="text-base max-w-3xl mx-auto leading-relaxed" style={{ color: '#666666' }}>
+              {dna?.archetype?.description}
             </p>
           </div>
 
