@@ -13,7 +13,7 @@ import {
   RefreshCw, Target, Zap, AlertTriangle, TrendingUp, CheckCircle2, XCircle,
   Brain, Users, AlertCircle, Sparkles, FileText, Flame, Scale, Eye, Heart,
   ZapOff, Crown, Rocket, MessageCircle, Activity, Compass, UserCircle,
-  Lightbulb, Shield, Rocket as RocketIcon, Star, ChevronRight, ArrowRight,
+  Lightbulb, Shield, Star, ChevronRight, ArrowRight,
 } from "lucide-react";
 
 // Animation variants for staggered children
@@ -423,7 +423,7 @@ export default function DNAResultsPage() {
                       <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
                         {i === 0 ? <Star className="w-6 h-6 text-amber-300" /> : 
                          i === 1 ? <Zap className="w-6 h-6 text-cyan-300" /> : 
-                         <RocketIcon className="w-6 h-6 text-emerald-300" />}
+                         <Rocket className="w-6 h-6 text-emerald-300" />}
                       </div>
                       <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
                         {i + 1}
