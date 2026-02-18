@@ -330,35 +330,19 @@ export default function DNAResultsPage() {
       </header>
 
       <main className="relative z-10 pt-24 pb-32">
-        {/* Hero */}
+        {/* Hero - SIN ANIMACIONES para debug */}
         <section ref={heroRef} className="max-w-6xl mx-auto px-6 mb-20">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Badge className="mb-4 bg-gradient-to-r from-cyan-50 to-violet-50 text-cyan-700 border-cyan-200 px-4 py-1.5 text-sm font-medium">
-                Founder DNA Analysis
-              </Badge>
-            </motion.div>
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-5xl md:text-7xl font-bold mb-4 text-neutral-900 bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900"
-            >
-              {archetype.name}
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-xl md:text-2xl text-neutral-500 max-w-2xl mx-auto font-light"
-            >
-              {archetype.tagline}
-            </motion.p>
-          </motion.div>
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-gradient-to-r from-cyan-50 to-violet-50 text-cyan-700 border-cyan-200 px-4 py-1.5 text-sm font-medium">
+              Founder DNA Analysis
+            </Badge>
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 text-neutral-900">
+              {archetype.name || "Loading..."}
+            </h1>
+            <p className="text-xl md:text-2xl text-neutral-500 max-w-2xl mx-auto font-light">
+              {archetype.tagline || "Your founder profile is being generated..."}
+            </p>
+          </div>
 
           <motion.div 
             variants={containerVariants}
