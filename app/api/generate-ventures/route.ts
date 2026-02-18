@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'edge';
-export const maxDuration = 45;
+export const runtime = 'nodejs';
+export const maxDuration = 60;
 
 // Venture templates by archetype for faster generation
 const ventureTemplates: Record<string, Array<{

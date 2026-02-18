@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useScroll, useSpring } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import { motion, useScroll, useSpring, useInView, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,67 @@ import {
   RefreshCw, Target, Zap, AlertTriangle, TrendingUp, CheckCircle2, XCircle,
   Brain, Users, AlertCircle, Sparkles, FileText, Flame, Scale, Eye, Heart,
   ZapOff, Crown, Rocket, MessageCircle, Activity, Compass, UserCircle,
+  Lightbulb, Shield, Rocket as RocketIcon, Star, ChevronRight, ArrowRight,
 } from "lucide-react";
+
+// Animation variants for staggered children
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: "easeOut" as const },
+  },
+};
+
+// Background decoration component
+function BackgroundDecorations() {
+  return (
+    <>
+      {/* Top-right gradient blob */}
+      <div className="fixed top-0 right-0 w-[800px] h-[800px] opacity-30 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 70% 20%, rgba(6, 182, 212, 0.15) 0%, transparent 50%)',
+        }}
+      />
+      {/* Bottom-left gradient blob */}
+      <div className="fixed bottom-0 left-0 w-[600px] h-[600px] opacity-30 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
+        }}
+      />
+      {/* Subtle grid pattern */}
+      <div className="fixed inset-0 opacity-[0.015] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px',
+        }}
+      />
+    </>
+  );
+}
+
+// Helper to split description into bullet points
+function parseDescriptionToBullets(description: string): string[] {
+  if (!description) return [];
+  // Split by periods or semicolons, filter out empty strings
+  return description
+    .split(/[.;]/)
+    .map(s => s.trim())
+    .filter(s => s.length > 10)
+    .slice(0, 6);
+}
 
 const DNA_KEY = "ventureGates_dna";
 const ANSWERS_KEY = "ventureGates_answers";
@@ -127,8 +187,13 @@ export default function DNAResultsPage() {
     { label: "Speed", value: parseInt(answers?.speed_quality || "5") },
   ];
 
+  const descriptionBullets = parseDescriptionToBullets(archetype.description);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const isHeroInView = useInView(heroRef, { once: true });
+
   return (
     <div className="min-h-screen bg-[#f5f5f5] text-neutral-900 overflow-x-hidden">
+      <BackgroundDecorations />
       <motion.div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-violet-500 to-amber-500 z-50 origin-left" style={{ scaleX }} />
       
       {/* Header */}
@@ -153,87 +218,278 @@ export default function DNAResultsPage() {
 
       <main className="relative z-10 pt-24 pb-32">
         {/* Hero */}
-        <section className="max-w-6xl mx-auto px-6 mb-20">
+        <section ref={heroRef} className="max-w-6xl mx-auto px-6 mb-20">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-            <Badge className="mb-4 bg-neutral-100 text-cyan-600 border-cyan-200">Founder DNA Analysis</Badge>
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 text-neutral-900">{archetype.name}</h1>
-            <p className="text-xl text-neutral-600 max-w-2xl mx-auto">{archetype.tagline}</p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Badge className="mb-4 bg-gradient-to-r from-cyan-50 to-violet-50 text-cyan-700 border-cyan-200 px-4 py-1.5 text-sm font-medium">
+                Founder DNA Analysis
+              </Badge>
+            </motion.div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-5xl md:text-7xl font-bold mb-4 text-neutral-900 bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900"
+            >
+              {archetype.name}
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-xl md:text-2xl text-neutral-500 max-w-2xl mx-auto font-light"
+            >
+              {archetype.tagline}
+            </motion.p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-            <StatCard value={archetype.founder_market_fit_score || 75} label="Market Fit" color="#06B6D4" delay={0.1} />
-            <StatCard value={(edge.superpowers || []).length} label="Superpowers" color="#8B5CF6" delay={0.2} />
-            <StatCard value={(shadow.cognitive_biases || []).length} label="Biases" color="#F59E0B" delay={0.3} />
-            <StatCard value={ventureFit.sweet_spot?.type || "B2C"} label="Sweet Spot" color="#10B981" delay={0.4} />
-          </div>
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
+          >
+            <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+              <StatCard value={archetype.founder_market_fit_score || 75} label="Market Fit" color="#06B6D4" delay={0.1} />
+            </motion.div>
+            <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+              <StatCard value={(edge.superpowers || []).length} label="Superpowers" color="#8B5CF6" delay={0.2} />
+            </motion.div>
+            <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+              <StatCard value={(shadow.cognitive_biases || []).length} label="Biases" color="#F59E0B" delay={0.3} />
+            </motion.div>
+            <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
+              <StatCard value={ventureFit.sweet_spot?.type || "B2C"} label="Sweet Spot" color="#10B981" delay={0.4} />
+            </motion.div>
+          </motion.div>
 
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="text-lg text-neutral-700 text-center max-w-3xl mx-auto">{archetype.description}</motion.p>
+          {/* Operating System - Description as bullet points */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isHeroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ delay: 0.5 }}
+            className="relative"
+          >
+            {/* Gradient backdrop */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-50/50 via-violet-50/30 to-amber-50/50 rounded-3xl -z-10" />
+            
+            <div className="p-8 md:p-10 rounded-3xl border border-neutral-200/60 bg-white/40 backdrop-blur-sm">
+              <h2 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-6 text-center">
+                Your Operating System
+              </h2>
+              <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
+                {descriptionBullets.map((bullet, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={isHeroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
+                    transition={{ delay: 0.6 + i * 0.1 }}
+                    className="flex items-start gap-3 group"
+                  >
+                    <div className="mt-1 flex-shrink-0">
+                      <CheckCircle2 className="w-5 h-5 text-cyan-500 group-hover:text-violet-500 transition-colors duration-300" />
+                    </div>
+                    <p className="text-neutral-700 leading-relaxed group-hover:text-neutral-900 transition-colors duration-300">
+                      {bullet}.
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         </section>
 
         {/* Cognitive */}
         <section className="max-w-6xl mx-auto px-6 mb-20">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white rounded-3xl p-8 md:p-12 border border-neutral-200 shadow-sm">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true }}
+            whileHover={{ boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.08)" }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-3xl p-8 md:p-12 border border-neutral-200 shadow-sm hover:border-neutral-300 transition-colors"
+          >
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <Brain className="w-10 h-10 text-cyan-600" />
-                  <div><h2 className="text-2xl font-bold text-neutral-900">Cognitive Profile</h2><p className="text-neutral-500">How you process</p></div>
-                </div>
-                <div className="space-y-4">
-                  <SkillBar label="Dominant" value={90} color="#06B6D4" />
-                  <SkillBar label="Pattern Recognition" value={85} color="#8B5CF6" />
-                  <SkillBar label="Decision Speed" value={88} color="#10B981" />
-                </div>
-                <div className="mt-6 p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                <motion.div 
+                  className="flex items-center gap-3 mb-6"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-100 to-cyan-50 flex items-center justify-center">
+                    <Brain className="w-6 h-6 text-cyan-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-neutral-900">Cognitive Profile</h2>
+                    <p className="text-neutral-500">How you process information</p>
+                  </div>
+                </motion.div>
+                <motion.div 
+                  className="space-y-4"
+                  variants={containerVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                >
+                  <motion.div variants={itemVariants}>
+                    <SkillBar label="Dominant" value={90} color="#06B6D4" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <SkillBar label="Pattern Recognition" value={85} color="#8B5CF6" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <SkillBar label="Decision Speed" value={88} color="#10B981" />
+                  </motion.div>
+                </motion.div>
+                <motion.div 
+                  className="mt-6 p-4 rounded-xl bg-gradient-to-r from-neutral-50 to-white border border-neutral-200"
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                >
                   <p className="text-sm text-cyan-600 font-medium">Dominant: <span className="text-neutral-800">{cognitive.dominant_function}</span></p>
                   <p className="text-sm text-violet-600 font-medium mt-2">Auxiliary: <span className="text-neutral-800">{cognitive.auxiliary_function}</span></p>
                   {cognitive.decision_making && <div className="pt-3 border-t border-neutral-200 mt-3"><p className="text-xs text-neutral-500 mb-1">Decision Making</p><p className="text-sm text-neutral-700">{cognitive.decision_making}</p></div>}
                   {cognitive.stress_response && <div className="mt-2"><p className="text-xs text-neutral-500 mb-1">Stress Response</p><p className="text-sm text-neutral-700">{cognitive.stress_response}</p></div>}
-                </div>
+                </motion.div>
               </div>
-              <div className="flex justify-center"><RadarChart data={personalityData} size={320} /></div>
+              <motion.div 
+                className="flex justify-center"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                <RadarChart data={personalityData} size={320} />
+              </motion.div>
             </div>
           </motion.div>
         </section>
 
-        {/* The Edge */}
+        {/* The Edge - Full-width hero layout */}
         <section className="max-w-6xl mx-auto px-6 mb-20">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-3 text-neutral-900"><Crown className="w-8 h-8 text-violet-600" /> The Edge</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {(edge.superpowers || []).map((p: any, i: number) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="p-6 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-                  <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center text-sm font-bold mb-4">{i + 1}</div>
-                  <h3 className="text-lg font-semibold text-violet-700 mb-2">{p.name}</h3>
-                  <p className="text-sm text-neutral-600">{p.description}</p>
-                  <div className="pt-4 border-t border-neutral-200 mt-4 space-y-2">
-                    <p className="text-xs text-neutral-500">Evidence: <span className="text-neutral-700">{p.evidence}</span></p>
-                    <p className="text-xs text-violet-600 font-medium">{p.unfair_advantage}</p>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true }}
+            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 text-white"
+          >
+            {/* Background decorations */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+            </div>
+            
+            <div className="relative p-8 md:p-12 lg:p-16">
+              {/* Header */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-center mb-12"
+              >
+                <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
+                  <Crown className="w-5 h-5 text-amber-300" />
+                  <span className="text-sm font-medium text-white/90">Your Competitive Advantage</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-bold mb-4">The Edge</h2>
+                <p className="text-lg text-white/70 max-w-2xl mx-auto">
+                  These superpowers define your unique founder profile and give you an unfair advantage.
+                </p>
+              </motion.div>
+
+              {/* Superpowers Grid */}
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="grid md:grid-cols-3 gap-6 mb-12"
+              >
+                {(edge.superpowers || []).map((p: any, i: number) => (
+                  <motion.div 
+                    key={i} 
+                    variants={itemVariants}
+                    whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.2 } }}
+                    className="group p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all duration-300"
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                        {i === 0 ? <Star className="w-6 h-6 text-amber-300" /> : 
+                         i === 1 ? <Zap className="w-6 h-6 text-cyan-300" /> : 
+                         <RocketIcon className="w-6 h-6 text-emerald-300" />}
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
+                        {i + 1}
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-amber-300 transition-colors">{p.name}</h3>
+                    <p className="text-white/80 text-sm leading-relaxed mb-4">{p.description}</p>
+                    <div className="pt-4 border-t border-white/10 space-y-2">
+                      <p className="text-xs text-white/60">Evidence: <span className="text-white/80">{p.evidence}</span></p>
+                      <p className="text-xs text-amber-300 font-medium">{p.unfair_advantage}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {/* Pattern Recognition */}
+              {edge.pattern_recognition && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                      <Eye className="w-6 h-6 text-amber-300" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold mb-2 text-amber-300">Pattern Recognition</h3>
+                      <p className="text-white/80 leading-relaxed">{edge.pattern_recognition}</p>
+                    </div>
                   </div>
                 </motion.div>
-              ))}
+              )}
             </div>
-            {edge.pattern_recognition && (
-              <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="mt-8 p-6 rounded-2xl bg-gradient-to-r from-amber-50 to-cyan-50 border border-neutral-200">
-                <div className="flex items-start gap-4">
-                  <Eye className="w-6 h-6 text-amber-600" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-amber-700 mb-2">Pattern Recognition</h3>
-                    <p className="text-neutral-700">{edge.pattern_recognition}</p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
           </motion.div>
         </section>
 
         {/* The Shadow */}
         <section className="max-w-6xl mx-auto px-6 mb-20">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-3 text-neutral-900"><AlertTriangle className="w-8 h-8 text-rose-600" /> The Shadow</h2>
-            <div className="space-y-4 mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-rose-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-neutral-900">The Shadow</h2>
+            </div>
+            
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="space-y-4 mb-8"
+            >
               {(shadow.cognitive_biases || []).map((bias: any, i: number) => (
-                <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="p-5 rounded-xl bg-rose-50 border border-rose-200">
+                <motion.div 
+                  key={i} 
+                  variants={itemVariants}
+                  whileHover={{ x: 4, transition: { duration: 0.2 } }}
+                  className="p-5 rounded-xl bg-rose-50 border border-rose-200 hover:border-rose-300 hover:shadow-md transition-all duration-300"
+                >
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="font-semibold text-rose-700">{bias.bias}</h3>
                     <Badge variant="outline" className="border-rose-300 text-rose-600">Watch</Badge>
@@ -245,67 +501,199 @@ export default function DNAResultsPage() {
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
+            
             <div className="grid md:grid-cols-3 gap-6">
-              <div className="p-5 rounded-xl bg-white border border-neutral-200">
+              <motion.div 
+                whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                className="p-5 rounded-xl bg-white border border-neutral-200"
+              >
                 <h3 className="font-semibold text-neutral-800 mb-3 flex items-center gap-2"><ZapOff className="w-4 h-4 text-amber-600" /> Failures</h3>
-                <ul className="space-y-1">{(shadow.failure_patterns || []).map((p: string, i: number) => <li key={i} className="text-sm text-neutral-600 flex gap-2"><span className="text-rose-500">→</span>{p}</li>)}</ul>
-              </div>
-              <div className="p-5 rounded-xl bg-white border border-neutral-200">
+                <ul className="space-y-2">{(shadow.failure_patterns || []).map((p: string, i: number) => <li key={i} className="text-sm text-neutral-600 flex gap-2"><span className="text-rose-500">→</span><span className="overflow-wrap-break-word break-words">{p}</span></li>)}</ul>
+              </motion.div>
+              <motion.div 
+                whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                className="p-5 rounded-xl bg-white border border-neutral-200"
+              >
                 <h3 className="font-semibold text-neutral-800 mb-3 flex items-center gap-2"><Eye className="w-4 h-4 text-violet-600" /> Blind Spots</h3>
-                <div className="flex flex-wrap gap-2">{(shadow.blind_spots || []).map((s: string, i: number) => <Badge key={i} className="bg-violet-100 text-violet-700 border-violet-200">{s}</Badge>)}</div>
-              </div>
-              <div className="p-5 rounded-xl bg-white border border-neutral-200">
+                <div className="flex flex-wrap gap-2">
+                  {(shadow.blind_spots || []).map((s: string, i: number) => (
+                    <Badge key={i} className="bg-violet-100 text-violet-700 border-violet-200 max-w-full overflow-wrap-break-word break-words whitespace-normal text-left">
+                      {s}
+                    </Badge>
+                  ))}
+                </div>
+              </motion.div>
+              <motion.div 
+                whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                className="p-5 rounded-xl bg-white border border-neutral-200"
+              >
                 <h3 className="font-semibold text-neutral-800 mb-3 flex items-center gap-2"><ZapOff className="w-4 h-4 text-amber-600" /> Energy Drains</h3>
-                <div className="flex flex-wrap gap-2">{(shadow.energy_drains || []).map((d: string, i: number) => <Badge key={i} className="bg-amber-100 text-amber-700 border-amber-200">{d}</Badge>)}</div>
-              </div>
+                <div className="flex flex-wrap gap-2">
+                  {(shadow.energy_drains || []).map((d: string, i: number) => (
+                    <Badge key={i} className="bg-amber-100 text-amber-700 border-amber-200 max-w-full overflow-wrap-break-word break-words whitespace-normal text-left">
+                      {d}
+                    </Badge>
+                  ))}
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </section>
 
         {/* Venture Fit */}
         <section className="max-w-6xl mx-auto px-6 mb-20">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-3 text-neutral-900"><Target className="w-8 h-8 text-emerald-600" /> Venture Fit</h2>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <Target className="w-6 h-6 text-emerald-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-neutral-900">Venture Fit</h2>
+            </div>
+            
             <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <motion.div 
+                whileHover={{ y: -4, boxShadow: "0 20px 40px -15px rgba(16, 185, 129, 0.2)", transition: { duration: 0.2 } }}
+                className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200"
+              >
                 <h3 className="font-semibold text-emerald-700 mb-2 flex items-center gap-2"><CheckCircle2 className="w-5 h-5"/> Sweet Spot</h3>
                 <p className="text-lg font-medium text-neutral-900 mb-2">{ventureFit.sweet_spot?.type}</p>
                 <p className="text-neutral-700 mb-4">{ventureFit.sweet_spot?.description}</p>
-                <div className="flex flex-wrap gap-2">{(ventureFit.sweet_spot?.examples || []).map((e: string, i: number) => <Badge key={i} className="bg-emerald-100 text-emerald-700 border-emerald-200">{e}</Badge>)}</div>
-              </div>
-              <div className="p-6 rounded-2xl bg-rose-50 border border-rose-200">
+                <div className="flex flex-wrap gap-2">
+                  {(ventureFit.sweet_spot?.examples || []).map((e: string, i: number) => (
+                    <Badge key={i} className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                      {e}
+                    </Badge>
+                  ))}
+                </div>
+              </motion.div>
+              <motion.div 
+                whileHover={{ y: -4, boxShadow: "0 20px 40px -15px rgba(244, 63, 94, 0.2)", transition: { duration: 0.2 } }}
+                className="p-6 rounded-2xl bg-rose-50 border border-rose-200"
+              >
                 <h3 className="font-semibold text-rose-700 mb-2 flex items-center gap-2"><XCircle className="w-5 h-5"/> Danger Zone</h3>
                 <p className="text-lg font-medium text-neutral-900 mb-2">{ventureFit.danger_zone?.type}</p>
                 <p className="text-neutral-700 mb-4">{ventureFit.danger_zone?.description}</p>
-                <div className="space-y-1">{(ventureFit.danger_zone?.warning_signs || []).map((s: string, i: number) => <p key={i} className="text-sm text-rose-600">⚠ {s}</p>)}</div>
-              </div>
+                <div className="space-y-1">
+                  {(ventureFit.danger_zone?.warning_signs || []).map((s: string, i: number) => (
+                    <p key={i} className="text-sm text-rose-600 flex items-start gap-2">
+                      <span className="flex-shrink-0">⚠</span>
+                      <span className="overflow-wrap-break-word break-words">{s}</span>
+                    </p>
+                  ))}
+                </div>
+              </motion.div>
             </div>
+            
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="p-5 rounded-xl bg-white border border-neutral-200"><h3 className="font-semibold text-cyan-600 mb-2 flex items-center gap-2"><Users className="w-4 h-4"/> Cofounder</h3><p className="text-sm text-neutral-600">{ventureFit.cofounder_profile}</p></div>
-              <div className="p-5 rounded-xl bg-white border border-neutral-200"><h3 className="font-semibold text-violet-600 mb-2 flex items-center gap-2"><Compass className="w-4 h-4"/> Stage</h3><p className="text-sm text-neutral-600">{ventureFit.optimal_stage}</p></div>
-              <div className="p-5 rounded-xl bg-white border border-neutral-200"><h3 className="font-semibold text-amber-600 mb-2 flex items-center gap-2"><UserCircle className="w-4 h-4"/> Team</h3><p className="text-sm text-neutral-600">{ventureFit.team_size_ideal}</p></div>
+              {[
+                { icon: Users, color: "cyan", title: "Cofounder", content: ventureFit.cofounder_profile },
+                { icon: Compass, color: "violet", title: "Stage", content: ventureFit.optimal_stage },
+                { icon: UserCircle, color: "amber", title: "Team", content: ventureFit.team_size_ideal },
+              ].map((item, i) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                  className="p-5 rounded-xl bg-white border border-neutral-200 hover:border-neutral-300 transition-colors"
+                >
+                  <h3 className={`font-semibold text-${item.color}-600 mb-2 flex items-center gap-2`}>
+                    <item.icon className="w-4 h-4"/> {item.title}
+                  </h3>
+                  <p className="text-sm text-neutral-600">{item.content}</p>
+                </motion.div>
+              ))}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <Gauge value={archetype.founder_market_fit_score || 75} label="Market Fit" color="#10B981" />
-              <Gauge value={parseInt(answers?.risk_security || "5") * 10} label="Risk" color="#06B6D4" />
-              <Gauge value={parseInt(answers?.individual_tribal || "5") * 10} label="Independence" color="#8B5CF6" />
-              <Gauge value={parseInt(answers?.structure_chaos || "5") * 10} label="Structure" color="#F59E0B" />
-            </div>
+            
+            {/* Gauges - Responsive grid */}
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-6"
+            >
+              <motion.div variants={itemVariants}>
+                <Gauge value={archetype.founder_market_fit_score || 75} label="Market Fit" color="#10B981" />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <Gauge value={parseInt(answers?.risk_security || "5") * 10} label="Risk" color="#06B6D4" />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <Gauge value={parseInt(answers?.individual_tribal || "5") * 10} label="Independence" color="#8B5CF6" />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <Gauge value={parseInt(answers?.structure_chaos || "5") * 10} label="Structure" color="#F59E0B" />
+              </motion.div>
+            </motion.div>
           </motion.div>
         </section>
 
         {/* Relationship Dynamics */}
         {(dynamics.as_cofounder || dynamics.as_leader) && (
           <section className="max-w-6xl mx-auto px-6 mb-20">
-            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <h2 className="text-2xl font-bold mb-8 flex items-center gap-3 text-neutral-900"><Users className="w-8 h-8 text-cyan-600" /> Relationship Dynamics</h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                {dynamics.as_cofounder && <div className="p-6 rounded-2xl bg-white border border-neutral-200"><h3 className="font-semibold text-cyan-700 mb-2">As Cofounder</h3><p className="text-neutral-700">{dynamics.as_cofounder}</p></div>}
-                {dynamics.as_leader && <div className="p-6 rounded-2xl bg-white border border-neutral-200"><h3 className="font-semibold text-violet-700 mb-2">As Leader</h3><p className="text-neutral-700">{dynamics.as_leader}</p></div>}
-                {dynamics.communication_style && <div className="p-6 rounded-2xl bg-white border border-neutral-200"><h3 className="font-semibold text-emerald-700 mb-2">Communication</h3><p className="text-neutral-700">{dynamics.communication_style}</p></div>}
-                {dynamics.conflict_response && <div className="p-6 rounded-2xl bg-white border border-neutral-200"><h3 className="font-semibold text-amber-700 mb-2">Conflict Response</h3><p className="text-neutral-700">{dynamics.conflict_response}</p></div>}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }} 
+              whileInView={{ opacity: 1, y: 0 }} 
+              viewport={{ once: true }}
+            >
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-cyan-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-neutral-900">Relationship Dynamics</h2>
               </div>
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="grid md:grid-cols-2 gap-6"
+              >
+                {dynamics.as_cofounder && (
+                  <motion.div 
+                    variants={itemVariants}
+                    whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                    className="p-6 rounded-2xl bg-white border border-neutral-200 hover:border-cyan-200 transition-colors"
+                  >
+                    <h3 className="font-semibold text-cyan-700 mb-2">As Cofounder</h3>
+                    <p className="text-neutral-700">{dynamics.as_cofounder}</p>
+                  </motion.div>
+                )}
+                {dynamics.as_leader && (
+                  <motion.div 
+                    variants={itemVariants}
+                    whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                    className="p-6 rounded-2xl bg-white border border-neutral-200 hover:border-violet-200 transition-colors"
+                  >
+                    <h3 className="font-semibold text-violet-700 mb-2">As Leader</h3>
+                    <p className="text-neutral-700">{dynamics.as_leader}</p>
+                  </motion.div>
+                )}
+                {dynamics.communication_style && (
+                  <motion.div 
+                    variants={itemVariants}
+                    whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                    className="p-6 rounded-2xl bg-white border border-neutral-200 hover:border-emerald-200 transition-colors"
+                  >
+                    <h3 className="font-semibold text-emerald-700 mb-2">Communication</h3>
+                    <p className="text-neutral-700">{dynamics.communication_style}</p>
+                  </motion.div>
+                )}
+                {dynamics.conflict_response && (
+                  <motion.div 
+                    variants={itemVariants}
+                    whileHover={{ y: -4, boxShadow: "0 10px 30px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                    className="p-6 rounded-2xl bg-white border border-neutral-200 hover:border-amber-200 transition-colors"
+                  >
+                    <h3 className="font-semibold text-amber-700 mb-2">Conflict Response</h3>
+                    <p className="text-neutral-700">{dynamics.conflict_response}</p>
+                  </motion.div>
+                )}
+              </motion.div>
             </motion.div>
           </section>
         )}
@@ -313,24 +701,42 @@ export default function DNAResultsPage() {
         {/* The Playbook */}
         <section className="max-w-6xl mx-auto px-6 mb-20">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-2xl font-bold mb-8 flex items-center gap-3 text-neutral-900"><FileText className="w-8 h-8 text-amber-600" /> The Playbook</h2>
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-neutral-900">The Playbook</h2>
+            </div>
             <div className="space-y-6">
               {playbookSections.map((section, i) => (
-                <motion.div key={section.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="rounded-2xl bg-white border border-neutral-200 overflow-hidden shadow-sm">
+                <motion.div 
+                  key={section.id} 
+                  initial={{ opacity: 0, y: 20 }} 
+                  whileInView={{ opacity: 1, y: 0 }} 
+                  viewport={{ once: true }} 
+                  transition={{ delay: i * 0.1 }} 
+                  whileHover={{ boxShadow: "0 20px 40px -15px rgba(0,0,0,0.08)", transition: { duration: 0.3 } }}
+                  className="rounded-2xl bg-white border border-neutral-200 overflow-hidden shadow-sm hover:border-neutral-300 transition-colors"
+                >
                   <div className="p-6 flex items-center gap-4 border-b border-neutral-100" style={{ backgroundColor: `${section.color}10` }}>
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${section.color}20`, color: section.color }}>{section.icon}</div>
                     <h3 className="text-xl font-semibold" style={{ color: section.color }}>{section.title}</h3>
                   </div>
                   <div className="p-6">
-                    <div className="grid md:grid-cols-3 gap-4">
+                    {/* Responsive grid: 3 cols desktop, 2 cols tablet, 1 col mobile */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {section.content.map((item: any, j: number) => (
-                        <div key={j} className="p-4 rounded-xl bg-neutral-50 border border-neutral-200">
+                        <motion.div 
+                          key={j} 
+                          whileHover={{ y: -4, boxShadow: "0 8px 25px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                          className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 h-full hover:border-neutral-300 transition-colors"
+                        >
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: `${section.color}20`, color: section.color }}>{item.step}</span>
+                            <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ backgroundColor: `${section.color}20`, color: section.color }}>{item.step}</span>
                             <h4 className="font-medium text-neutral-900">{item.title}</h4>
                           </div>
-                          <p className="text-sm text-neutral-600">{item.description}</p>
-                        </div>
+                          <p className="text-sm text-neutral-600 overflow-wrap-break-word break-words">{item.description}</p>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
@@ -342,27 +748,81 @@ export default function DNAResultsPage() {
 
         {/* Flow Triggers */}
         <section className="max-w-6xl mx-auto px-6 mb-20">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-8 rounded-2xl bg-gradient-to-r from-cyan-50 via-violet-50 to-amber-50 border border-neutral-200">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3 text-neutral-900"><Flame className="w-8 h-8 text-cyan-600" /> Flow Triggers</h2>
-            <div className="grid md:grid-cols-5 gap-4">
-              {(cognitive.flow_triggers || []).map((trigger: string, i: number) => (
-                <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="p-4 rounded-xl bg-white border border-neutral-200 text-center">
-                  <span className="text-lg font-bold text-cyan-600">{i + 1}</span>
-                  <p className="text-sm text-neutral-700 mt-2">{trigger}</p>
-                </motion.div>
-              ))}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true }} 
+            className="p-8 rounded-2xl bg-gradient-to-r from-cyan-50 via-violet-50 to-amber-50 border border-neutral-200 relative overflow-hidden"
+          >
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-cyan-200/30 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-amber-200/30 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+            
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center">
+                  <Flame className="w-6 h-6 text-cyan-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-neutral-900">Flow Triggers</h2>
+              </div>
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="grid grid-cols-2 md:grid-cols-5 gap-4"
+              >
+                {(cognitive.flow_triggers || []).map((trigger: string, i: number) => (
+                  <motion.div 
+                    key={i} 
+                    variants={itemVariants}
+                    whileHover={{ y: -4, scale: 1.02, boxShadow: "0 10px 25px -10px rgba(0,0,0,0.1)", transition: { duration: 0.2 } }}
+                    className="p-4 rounded-xl bg-white border border-neutral-200 text-center hover:border-cyan-200 transition-colors"
+                  >
+                    <span className="text-lg font-bold text-cyan-600">{i + 1}</span>
+                    <p className="text-sm text-neutral-700 mt-2 overflow-wrap-break-word break-words">{trigger}</p>
+                  </motion.div>
+                ))}
+              </motion.div>
             </div>
           </motion.div>
         </section>
 
         {/* CTA */}
         <section className="max-w-4xl mx-auto px-6 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-8 rounded-2xl bg-white border border-neutral-200 shadow-sm">
-            <h2 className="text-3xl font-bold mb-4 text-neutral-900">Ready to discover your ventures?</h2>
-            <p className="text-neutral-600 mb-6">We'll generate 3 personalized opportunities based on your DNA.</p>
-            <Button size="lg" onClick={() => router.push("/discover/processing-ventures")} className="bg-neutral-900 text-white hover:bg-neutral-800">
-              <Sparkles className="w-5 h-5 mr-2" /> Generate Ventures
-            </Button>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }} 
+            whileInView={{ opacity: 1, y: 0 }} 
+            viewport={{ once: true }} 
+            whileHover={{ boxShadow: "0 30px 60px -20px rgba(0,0,0,0.1)", transition: { duration: 0.3 } }}
+            className="p-8 md:p-12 rounded-2xl bg-white border border-neutral-200 shadow-sm relative overflow-hidden"
+          >
+            {/* Decorative gradient */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-violet-500 to-amber-500" />
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-b from-cyan-100/50 to-transparent rounded-full blur-3xl" />
+            
+            <div className="relative">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                whileInView={{ scale: 1, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center mx-auto mb-6"
+              >
+                <Rocket className="w-8 h-8 text-white" />
+              </motion.div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-neutral-900">Ready to discover your ventures?</h2>
+              <p className="text-neutral-600 mb-8 text-lg max-w-lg mx-auto">We'll generate 3 personalized opportunities based on your DNA.</p>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  size="lg" 
+                  onClick={() => router.push("/discover/processing-ventures")} 
+                  className="bg-neutral-900 text-white hover:bg-neutral-800 text-lg px-8 py-6 h-auto shadow-lg hover:shadow-xl transition-shadow"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" /> Generate Ventures
+                </Button>
+              </motion.div>
+            </div>
           </motion.div>
         </section>
       </main>

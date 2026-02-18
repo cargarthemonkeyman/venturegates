@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Target,
   Sparkles,
@@ -15,32 +16,21 @@ import {
   RefreshCw,
   ArrowRight,
   Loader2,
+  Brain,
+  Zap,
 } from "lucide-react";
 
 const DNA_KEY = "ventureGates_dna";
 const VENTURES_KEY = "ventureGates_ventures";
 const ANSWERS_KEY = "ventureGates_answers";
 
-const COLORS = {
-  bg: "#0A0A0A",
-  card: "#111111",
-  border: "#262626",
-  text: "#FFFFFF",
-  textMuted: "#A3A3A3",
-  textDim: "#737373",
-  accent: "#4F46E5",
-  danger: "#DC2626",
-  success: "#16A34A",
-  warning: "#F59E0B",
-};
-
 const steps = [
-  { icon: Target, text: "Analyzing your DNA...", description: "Loading profile data" },
-  { icon: Lightbulb, text: "Crafting venture #1...", description: "Generating first opportunity" },
-  { icon: Lightbulb, text: "Crafting venture #2...", description: "Generating second opportunity" },
-  { icon: Lightbulb, text: "Crafting venture #3...", description: "Generating third opportunity" },
-  { icon: TrendingUp, text: "Evaluating fit...", description: "Calculating compatibility scores" },
-  { icon: Sparkles, text: "Finalizing...", description: "Preparing results" },
+  { icon: Brain, text: "Analyzing your DNA...", description: "Loading profile data", color: "#8B5CF6" },
+  { icon: Lightbulb, text: "Crafting venture #1...", description: "Generating first opportunity", color: "#06B6D4" },
+  { icon: Lightbulb, text: "Crafting venture #2...", description: "Generating second opportunity", color: "#06B6D4" },
+  { icon: Lightbulb, text: "Crafting venture #3...", description: "Generating third opportunity", color: "#06B6D4" },
+  { icon: Target, text: "Evaluating fit...", description: "Calculating compatibility scores", color: "#F59E0B" },
+  { icon: Sparkles, text: "Finalizing...", description: "Preparing your ventures", color: "#10B981" },
 ];
 
 export default function ProcessingVenturesPage() {
@@ -59,7 +49,7 @@ export default function ProcessingVenturesPage() {
     index: number
   ): Promise<any> => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     try {
       const response = await fetch("/api/generate-ventures", {
@@ -110,13 +100,11 @@ export default function ProcessingVenturesPage() {
       let startIndex = savedVentures.length;
       let newFailedIndices: number[] = [];
 
-      // Generate ventures sequentially but with individual error handling
       for (let i = startIndex; i < 3; i++) {
         setCurrentStep(i + 1);
         setProgress(((i + 1) / 6) * 100);
         
         try {
-          // Try up to 2 times per venture
           let venture = null;
           let attempts = 0;
           
@@ -126,7 +114,6 @@ export default function ProcessingVenturesPage() {
             } catch (err) {
               attempts++;
               if (attempts >= 2) throw err;
-              // Wait before retry
               await new Promise(r => setTimeout(r, 2000));
             }
           }
@@ -141,7 +128,6 @@ export default function ProcessingVenturesPage() {
           newFailedIndices.push(i);
           setFailedIndices([...newFailedIndices]);
           
-          // Add placeholder with error flag
           newVentures.push({
             id: `v${i + 1}`,
             name: `Venture ${i + 1}`,
@@ -154,7 +140,6 @@ export default function ProcessingVenturesPage() {
       setCurrentStep(5);
       setProgress(100);
       
-      // Small delay for visual completion
       setTimeout(() => {
         setCompleted(true);
       }, 500);
@@ -171,20 +156,31 @@ export default function ProcessingVenturesPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: COLORS.bg }}>
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-16 h-16 mx-auto mb-4" style={{ color: COLORS.danger }} />
-          <h2 className="text-2xl font-bold mb-2" style={{ color: COLORS.text }}>Generation Paused</h2>
-          <p className="mb-6" style={{ color: COLORS.textMuted }}>{error}</p>
-          <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => router.push("/discover/dna-results")} style={{ borderColor: COLORS.border, color: COLORS.text }}>
-              Back to DNA
-            </Button>
-            <Button onClick={() => { setError(null); setIsRetrying(true); runGeneration(); }} style={{ backgroundColor: COLORS.accent }}>
-              <RefreshCw className="w-4 h-4 mr-2" /> Retry
-            </Button>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center px-4 dot-pattern-bg">
+        <Card className="max-w-md w-full bg-white border-neutral-200 shadow-sm">
+          <CardContent className="p-8 text-center">
+            <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-rose-500" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2 text-neutral-900">Generation Paused</h2>
+            <p className="mb-6 text-neutral-600">{error}</p>
+            <div className="flex gap-3 justify-center">
+              <Button 
+                variant="outline" 
+                onClick={() => router.push("/discover/dna-results")}
+                className="border-neutral-300 text-neutral-700 hover:bg-neutral-100"
+              >
+                Back to DNA
+              </Button>
+              <Button 
+                onClick={() => { setError(null); setIsRetrying(true); runGeneration(); }}
+                className="bg-neutral-900 text-white hover:bg-neutral-800"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" /> Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -194,24 +190,33 @@ export default function ProcessingVenturesPage() {
     const successCount = ventures.filter(v => !v.error).length;
     
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: COLORS.bg }}>
-        <Card className="max-w-md w-full" style={{ backgroundColor: COLORS.card, borderColor: COLORS.border }}>
+      <div className="min-h-screen flex items-center justify-center px-4 dot-pattern-bg">
+        <Card className="max-w-md w-full bg-white border-neutral-200 shadow-sm">
           <CardContent className="p-8 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: hasErrors ? `${COLORS.warning}20` : `${COLORS.success}20` }}>
+            <motion.div 
+              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ backgroundColor: hasErrors ? "#FEF3C7" : "#D1FAE5" }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            >
               {hasErrors ? (
-                <AlertCircle className="w-8 h-8" style={{ color: COLORS.warning }} />
+                <AlertCircle className="w-8 h-8 text-amber-500" />
               ) : (
-                <CheckCircle2 className="w-8 h-8" style={{ color: COLORS.success }} />
+                <CheckCircle2 className="w-8 h-8 text-emerald-500" />
               )}
-            </div>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: COLORS.text }}>
-              {hasErrors ? "Partially Ready" : "Ready"}
+            </motion.div>
+            <h2 className="text-2xl font-bold mb-2 text-neutral-900">
+              {hasErrors ? "Partially Ready" : "All Set!"}
             </h2>
-            <p className="mb-6" style={{ color: COLORS.textMuted }}>
+            <p className="mb-6 text-neutral-600">
               {successCount} venture{successCount !== 1 ? 's' : ''} generated
               {hasErrors && ` (${failedIndices.length} failed)`}
             </p>
-            <Button onClick={() => router.push("/discover/results")} style={{ backgroundColor: COLORS.accent }}>
+            <Button 
+              onClick={() => router.push("/discover/results")}
+              className="bg-neutral-900 text-white hover:bg-neutral-800"
+            >
               View Ventures <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </CardContent>
@@ -222,22 +227,36 @@ export default function ProcessingVenturesPage() {
 
   const CurrentIcon = steps[currentStep]?.icon || Sparkles;
   const currentStepData = steps[currentStep];
+  const currentColor = currentStepData?.color || "#8B5CF6";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: COLORS.bg }}>
+    <div className="min-h-screen flex items-center justify-center p-4 dot-pattern-bg">
       <div className="max-w-md w-full">
-        <Card style={{ backgroundColor: COLORS.card, borderColor: COLORS.border }}>
+        {/* Header */}
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Badge className="mb-4 bg-cyan-100 text-cyan-700 border-cyan-200">
+            <Zap className="w-3 h-3 mr-1" /> AI Generation
+          </Badge>
+          <h1 className="text-2xl font-bold text-neutral-900 mb-2">Generating Your Ventures</h1>
+          <p className="text-neutral-600">Creating personalized opportunities based on your founder DNA</p>
+        </motion.div>
+
+        <Card className="bg-white border-neutral-200 shadow-sm">
           <CardContent className="p-8">
             {/* Progress */}
             <div className="mb-8">
-              <div className="flex justify-between text-xs mb-2" style={{ color: COLORS.textDim }}>
-                <span>Progress</span>
-                <span>{Math.round(progress)}%</span>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-neutral-500">Progress</span>
+                <span className="font-medium text-neutral-900">{Math.round(progress)}%</span>
               </div>
-              <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: COLORS.border }}>
+              <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ backgroundColor: COLORS.accent }}
+                  style={{ backgroundColor: currentColor }}
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.5 }}
@@ -255,21 +274,40 @@ export default function ProcessingVenturesPage() {
                   exit={{ opacity: 0, y: -10 }}
                   className="flex flex-col items-center"
                 >
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: COLORS.border }}>
-                    <CurrentIcon className="w-6 h-6" style={{ color: COLORS.accent }} />
-                  </div>
-                  <h2 className="text-lg font-semibold mb-1" style={{ color: COLORS.text }}>
+                  <motion.div 
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                    style={{ 
+                      backgroundColor: `${currentColor}15`,
+                      border: `2px solid ${currentColor}30`
+                    }}
+                    animate={{ 
+                      scale: [1, 1.05, 1],
+                    }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    <CurrentIcon className="w-8 h-8" style={{ color: currentColor }} />
+                  </motion.div>
+                  <h2 className="text-lg font-semibold mb-1 text-neutral-900">
                     {currentStepData?.text || "Finalizing..."}
                   </h2>
-                  <p className="text-sm" style={{ color: COLORS.textMuted }}>
+                  <p className="text-sm text-neutral-500">
                     {currentStepData?.description || "Processing"}
                   </p>
                   
                   {/* Show venture count if in venture generation phase */}
                   {currentStep >= 1 && currentStep <= 3 && ventures.length > 0 && (
-                    <p className="text-xs mt-3" style={{ color: COLORS.success }}>
-                      ✓ {ventures.length} venture{ventures.length !== 1 ? 's' : ''} ready
-                    </p>
+                    <motion.p 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-xs mt-3 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700"
+                    >
+                      <CheckCircle2 className="w-3 h-3 inline mr-1" />
+                      {ventures.length} venture{ventures.length !== 1 ? 's' : ''} ready
+                    </motion.p>
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -277,14 +315,14 @@ export default function ProcessingVenturesPage() {
 
             {/* Step indicators */}
             <div className="flex justify-center gap-2 mt-8">
-              {steps.map((_, i) => (
+              {steps.map((step, i) => (
                 <motion.div
                   key={i}
                   className="w-2 h-2 rounded-full"
                   style={{
-                    backgroundColor: i <= currentStep ? COLORS.accent : COLORS.border,
+                    backgroundColor: i <= currentStep ? step.color : "#E5E5E5",
                   }}
-                  animate={i === currentStep ? { scale: [1, 1.2, 1] } : {}}
+                  animate={i === currentStep ? { scale: [1, 1.3, 1] } : {}}
                   transition={{ duration: 1, repeat: Infinity }}
                 />
               ))}
@@ -295,19 +333,23 @@ export default function ProcessingVenturesPage() {
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center text-xs mt-6"
-                style={{ color: COLORS.textDim }}
+                className="text-center text-xs mt-6 text-neutral-400"
               >
-                Creating detailed venture plans...
+                Creating detailed venture plans with market analysis...
               </motion.p>
             )}
           </CardContent>
         </Card>
 
-        <p className="text-center mt-6 text-sm" style={{ color: COLORS.textDim }}>
-          <span style={{ color: COLORS.accent }}>Tip:</span> Each venture includes market analysis,
+        <motion.p 
+          className="text-center mt-6 text-sm text-neutral-500"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <span className="text-cyan-600 font-medium">Tip:</span> Each venture includes market analysis,
           business model, and execution plan
-        </p>
+        </motion.p>
       </div>
     </div>
   );

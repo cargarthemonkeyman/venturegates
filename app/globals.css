@@ -131,3 +131,12 @@
 .glow-subtle {
   box-shadow: 0 4px 20px -4px rgba(99, 102, 241, 0.25);
 }
+
+/* Word break utilities */
+.overflow-wrap-break-word {
+  overflow-wrap: break-word;
+}
+
+.break-words {
+  word-break: break-word;
+}

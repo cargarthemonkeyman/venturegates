@@ -74,53 +74,53 @@ interface SliderQuestion extends Omit<Question, "type" | "options"> {
 type AllQuestionTypes = Question | SliderQuestion;
 
 const questions: AllQuestionTypes[] = [
-  // === 16PERSONALITIES DIMENSIONS (3 preguntas con sliders) ===
+  // === 16PERSONALITIES DIMENSIONS (3 questions with sliders) ===
   {
     id: "structure_chaos",
     type: "slider",
-    title: "Estructura vs Caos",
-    subtitle: "Tu estilo de trabajo preferido",
-    description: "¿Cómo prefieres organizar tu trabajo diario?",
+    title: "Structure vs Chaos",
+    subtitle: "Your Preferred Work Style",
+    description: "How do you prefer to organize your daily work?",
     slider: {
       min: 0,
       max: 10,
-      minLabel: "Rutinas claras",
-      maxLabel: "Improvisación total",
-      minDescription: "Procesos definidos, horarios fijos, planificación detallada",
-      maxDescription: "Flexibilidad total, adaptación en tiempo real, sin plan rígido"
+      minLabel: "Clear Routines",
+      maxLabel: "Total Improvisation",
+      minDescription: "Defined processes, fixed schedules, detailed planning",
+      maxDescription: "Total flexibility, real-time adaptation, no rigid plan"
     }
   },
   {
     id: "risk_security",
     type: "slider",
-    title: "Riesgo vs Seguridad",
-    subtitle: "Tu tolerancia al riesgo empresarial",
-    description: "Ante una decisión importante de negocio, ¿qué priorizas?",
+    title: "Risk vs Security",
+    subtitle: "Your Business Risk Tolerance",
+    description: "When facing an important business decision, what do you prioritize?",
     slider: {
       min: 0,
       max: 10,
-      minLabel: "Minimizar riesgo",
-      maxLabel: "Apostar alto",
-      minDescription: "Paso seguro, validación previa, pérdidas mínimas posibles",
-      maxDescription: "Alto retorno potencial, primero en el mercado, asumo el riesgo"
+      minLabel: "Minimize Risk",
+      maxLabel: "Bet Big",
+      minDescription: "Safe step, prior validation, minimal possible losses",
+      maxDescription: "High potential return, first to market, I accept the risk"
     }
   },
   {
     id: "individual_tribal",
     type: "slider",
     title: "Individual vs Tribal",
-    subtitle: "¿De dónde viene tu energía laboral?",
-    description: "¿En qué entorno te sientes más productivo y energizado?",
+    subtitle: "Where does your work energy come from?",
+    description: "In what environment do you feel most productive and energized?",
     slider: {
       min: 0,
       max: 10,
-      minLabel: "Trabajo solitario",
-      maxLabel: "Colaboración constante",
-      minDescription: "Focus profundo, trabajo individual, mínimas distracciones",
-      maxDescription: "Brainstorming en equipo, energía grupal, colaboración continua"
+      minLabel: "Solo Work",
+      maxLabel: "Constant Collaboration",
+      minDescription: "Deep focus, individual work, minimal distractions",
+      maxDescription: "Team brainstorming, group energy, continuous collaboration"
     }
   },
-  // === PREGUNTAS ORIGINALES ===
+  // === ORIGINAL QUESTIONS ===
   {
     id: "archetype",
     type: "single-with-other",
@@ -674,12 +674,12 @@ export default function DiscoverPage() {
                       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-100">
                         <SlidersHorizontal className="w-4 h-4 text-neutral-600" />
                         <span className="text-sm text-neutral-600">
-                          Tu posición: <strong className="text-neutral-900">
-                            {parseInt((answers[currentQuestion.id] as string) || "5", 10) <= 3 
-                              ? (currentQuestion as SliderQuestion).slider.minLabel 
-                              : parseInt((answers[currentQuestion.id] as string) || "5", 10) >= 7 
-                                ? (currentQuestion as SliderQuestion).slider.maxLabel 
-                                : "Equilibrio"}
+                          Your position: <strong className="text-neutral-900">
+                            {parseInt((answers[currentQuestion.id] as string) || "5", 10) <= 3
+                              ? (currentQuestion as SliderQuestion).slider.minLabel
+                              : parseInt((answers[currentQuestion.id] as string) || "5", 10) >= 7
+                                ? (currentQuestion as SliderQuestion).slider.maxLabel
+                                : "Balance"}
                           </strong>
                         </span>
                       </div>
