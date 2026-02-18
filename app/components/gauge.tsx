@@ -156,10 +156,9 @@ export function Gauge({
         </div>
       </div>
       
-      {/* Label - Below the gauge */}
-      <div className="text-center mt-3">
-        <div className="text-sm font-medium text-neutral-900">{label}</div>
-        {sublabel && <div className="text-xs text-neutral-500">{sublabel}</div>}
+      {/* Label - Below the gauge - solo label, no sublabel duplicado */}
+      <div className="text-center mt-2">
+        <div className="text-sm font-semibold text-neutral-900">{label}</div>
       </div>
     </motion.div>
   );

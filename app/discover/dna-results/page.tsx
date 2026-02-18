@@ -137,13 +137,68 @@ export default function DNAResultsPage() {
     setLoading(false);
   }, []);
 
-  // Extract all DNA data with deep fallbacks (moved before early returns)
-  const archetype = dna?.archetype || {};
-  const cognitive = dna?.cognitive_profile || {};
-  const edge = dna?.the_edge || {};
-  const shadow = dna?.the_shadow || {};
-  const ventureFit = dna?.venture_fit || {};
-  const playbook = dna?.playbook || {};
+  // Extract all DNA data with deep fallbacks
+  // El DNA ya viene como objeto founder_dna desde el useEffect (línea 119)
+  // dna = parsed.founder_dna || parsed.venture_dna || parsed
+  
+  const archetype = dna?.archetype || {
+    name: "The Visionary Architect",
+    tagline: "You build bold visions with systematic precision.",
+    description: "Your founder DNA emerges from a unique combination of structure preference, risk appetite, and collaboration orientation.",
+    founder_market_fit_score: 75
+  };
+  
+  const cognitive = dna?.cognitive_profile || {
+    dominant_function: "Systematic problem solving",
+    auxiliary_function: "Strategic planning",
+    decision_making: "You gather information before making informed decisions.",
+    stress_response: "Under stress, you seek to impose order and structure.",
+    flow_triggers: ["Solving complex problems", "Strategic planning", "Building systems"]
+  };
+  
+  const edge = dna?.the_edge || {
+    superpowers: [
+      {
+        name: "Strategic Vision",
+        description: "You naturally see how pieces fit together into a coherent whole.",
+        evidence: "Based on your assessment patterns",
+        unfair_advantage: "Your ability to see the big picture gives you an edge."
+      }
+    ],
+    pattern_recognition: "You notice patterns in complexity that others miss."
+  };
+  
+  const shadow = dna?.the_shadow || {
+    cognitive_biases: [
+      {
+        bias: "Perfectionism",
+        manifestation: "Delaying launches until 'ready'",
+        trigger: "Quality threshold not met",
+        mitigation: "Ship at 80%. Iterate later."
+      }
+    ],
+    failure_patterns: ["Over-engineering simple solutions"],
+    blind_spots: ["Emotional undertones in teams"],
+    energy_drains: ["Repetitive meetings without decisions"]
+  };
+  
+  const ventureFit = dna?.venture_fit || {
+    sweet_spot: {
+      type: "B2B SaaS with clear metrics",
+      description: "Your systematic nature excels with clear KPIs.",
+      examples: ["Enterprise software", "Developer tools", "B2B marketplaces"]
+    },
+    danger_zone: {
+      type: "Early-stage consumer social",
+      description: "Ambiguity and emotional buyers drain you.",
+      warning_signs: ["Unclear success metrics", "Long sales cycles"]
+    },
+    cofounder_profile: "Technical expert who complements your strategic vision.",
+    optimal_stage: "Seed to Series A",
+    team_size_ideal: "5-15 people"
+  };
+  
+  const playbook = dna?.playbook || fallbackPlaybook;
   const dynamics = dna?.relationship_dynamics || {};
 
   // Helper to safely normalize playbook arrays
