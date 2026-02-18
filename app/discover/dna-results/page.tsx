@@ -341,8 +341,12 @@ export default function DNAResultsPage() {
             <h1 className="text-5xl md:text-7xl font-bold mb-4 text-gray-900">
               {dna?.archetype?.name || "Loading..."}
             </h1>
-            <p className="text-xl md:text-2xl text-gray-500 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-gray-500 max-w-2xl mx-auto mb-6">
               {dna?.archetype?.tagline || "Complete the wizard to see your profile"}
+            </p>
+            {/* Descripción del arquetipo */}
+            <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              {dna?.archetype?.description || "Your founder DNA emerges from a unique combination of structure preference, risk appetite, and collaboration orientation."}
             </p>
           </div>
 
@@ -353,40 +357,29 @@ export default function DNAResultsPage() {
             <StatCard value={ventureFit?.sweet_spot?.type || "B2C"} label="Sweet Spot" color="#10B981" />
           </div>
 
-          {/* Operating System - Description as bullet points */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={isHeroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ delay: 0.5 }}
-            className="relative"
-          >
-            {/* Gradient backdrop */}
+          {/* Operating System - SIN ANIMACIONES */}
+          <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-50/50 via-violet-50/30 to-amber-50/50 rounded-3xl -z-10" />
-            
             <div className="p-8 md:p-10 rounded-3xl border border-neutral-200/60 bg-white/40 backdrop-blur-sm">
               <h2 className="text-sm font-semibold text-neutral-400 uppercase tracking-wider mb-6 text-center">
                 Your Operating System
               </h2>
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
-                {descriptionBullets.map((bullet, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={isHeroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
-                    transition={{ delay: 0.6 + i * 0.1 }}
-                    className="flex items-start gap-3 group"
-                  >
+                {descriptionBullets.length > 0 ? descriptionBullets.map((bullet, i) => (
+                  <div key={i} className="flex items-start gap-3">
                     <div className="mt-1 flex-shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-cyan-500 group-hover:text-violet-500 transition-colors duration-300" />
+                      <CheckCircle2 className="w-5 h-5 text-cyan-500" />
                     </div>
-                    <p className="text-neutral-700 leading-relaxed group-hover:text-neutral-900 transition-colors duration-300">
+                    <p className="text-neutral-700 leading-relaxed">
                       {bullet}.
                     </p>
-                  </motion.div>
-                ))}
+                  </div>
+                )) : (
+                  <p className="text-neutral-500 col-span-2 text-center">No description available</p>
+                )}
               </div>
             </div>
-          </motion.div>
+          </div>
         </section>
 
         {/* Cognitive */}
