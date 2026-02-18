@@ -330,23 +330,19 @@ export default function DNAResultsPage() {
       </header>
 
       <main className="relative z-10 pt-24 pb-32">
-        {/* Hero */}
-        <section ref={heroRef} className="max-w-6xl mx-auto px-6 mb-20">
-          <div className="text-center mb-12" style={{ minHeight: '300px' }}>
-            <div className="inline-block mb-4 px-4 py-2 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-full text-sm font-medium">
-              Founder DNA Analysis
+        {/* Hero - ULTRA SIMPLE */}
+        <section className="max-w-6xl mx-auto px-6 mb-20">
+          <div className="text-center mb-12">
+            <div className="mb-4">
+              <span className="px-4 py-2 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-full text-sm font-medium">
+                Founder DNA Analysis
+              </span>
             </div>
-            <h1 
-              className="text-5xl md:text-7xl font-bold mb-4" 
-              style={{ color: '#171717', display: 'block', visibility: 'visible' }}
-            >
-              {archetype?.name || "The Visionary Architect"}
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 text-gray-900">
+              {dna?.archetype?.name || "Loading..."}
             </h1>
-            <p 
-              className="text-xl md:text-2xl max-w-2xl mx-auto font-light"
-              style={{ color: '#737373', display: 'block', visibility: 'visible' }}
-            >
-              {archetype?.tagline || "You build bold visions with systematic precision."}
+            <p className="text-xl md:text-2xl text-gray-500 max-w-2xl mx-auto">
+              {dna?.archetype?.tagline || "Complete the wizard to see your profile"}
             </p>
           </div>
 
