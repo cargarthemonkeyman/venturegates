@@ -130,22 +130,29 @@ export function Gauge({
         
         {/* Value - Centered inside the arc area */}
         <div 
-          className="absolute flex flex-col items-center justify-center"
+          className="absolute inset-0 flex items-center justify-center"
           style={{ 
-            top: size * 0.25,
-            left: '50%',
-            transform: 'translateX(-50%)'
+            top: `-${size * 0.05}px`, // Slight offset to center in the arc
           }}
         >
-          <motion.span 
-            className="text-2xl font-bold"
-            style={{ color }}
+          <motion.div 
+            className="flex flex-col items-center"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
             transition={{ delay: 0.5, duration: 0.5 }}
           >
-            {Math.round(value)}{max === 100 ? "%" : ""}
-          </motion.span>
+            <span 
+              className="text-3xl font-bold leading-none"
+              style={{ color }}
+            >
+              {Math.round(value)}{max === 100 ? "%" : ""}
+            </span>
+            {sublabel && (
+              <span className="text-[10px] text-neutral-500 mt-0.5 uppercase tracking-wide">
+                {sublabel}
+              </span>
+            )}
+          </motion.div>
         </div>
       </div>
       

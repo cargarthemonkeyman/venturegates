@@ -182,13 +182,14 @@ export default function DNAResultsPage() {
     return isNaN(parsed) ? fallback : parsed;
   };
 
+  // Personality data for radar - prioritize answers from wizard, fallback to DNA or defaults
   const personalityData = [
-    { label: "Structure", value: safeParseInt(answers?.structure_chaos, 5) },
-    { label: "Risk", value: safeParseInt(answers?.risk_security, 5) },
-    { label: "Individual", value: safeParseInt(answers?.individual_tribal, 5) },
-    { label: "Vision", value: safeParseInt(answers?.vision_execution, 5) },
-    { label: "Innovation", value: safeParseInt(answers?.innovation_optimization, 5) },
-    { label: "Speed", value: safeParseInt(answers?.speed_quality, 5) },
+    { label: "Structure", value: safeParseInt(answers?.structure_chaos ?? dna?.cognitive_profile?.structure_preference, 5) },
+    { label: "Risk", value: safeParseInt(answers?.risk_security ?? dna?.cognitive_profile?.risk_preference, 5) },
+    { label: "Individual", value: safeParseInt(answers?.individual_tribal ?? dna?.cognitive_profile?.individual_preference, 5) },
+    { label: "Vision", value: safeParseInt(answers?.vision_execution ?? dna?.cognitive_profile?.vision_score, 5) },
+    { label: "Innovation", value: safeParseInt(answers?.innovation_optimization ?? dna?.cognitive_profile?.innovation_score, 5) },
+    { label: "Speed", value: safeParseInt(answers?.speed_quality ?? dna?.cognitive_profile?.speed_score, 5) },
   ];
 
   const descriptionBullets = parseDescriptionToBullets(archetype.description);
@@ -229,11 +230,14 @@ export default function DNAResultsPage() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center">
               <Target className="w-4 h-4 text-white" />
             </div>
-            <span className="font-semibold text-lg">VentureGates</span>
+            <div className="flex flex-col">
+              <span className="font-semibold text-lg leading-tight">VentureGates</span>
+              <span className="text-xs text-neutral-500">Founder DNA Analysis</span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => router.push("/discover")} className="text-neutral-600 hover:text-neutral-900">
-              <RefreshCw className="w-4 h-4 mr-2" /> Retake
+              <RefreshCw className="w-4 h-4 mr-2" /> Retake Assessment
             </Button>
             <Button size="sm" onClick={() => router.push("/discover/processing-ventures")} className="bg-neutral-900 text-white hover:bg-neutral-800">
               <Sparkles className="w-4 h-4 mr-2" /> Generate Ventures
@@ -363,13 +367,13 @@ export default function DNAResultsPage() {
                   viewport={{ once: true }}
                 >
                   <motion.div variants={itemVariants}>
-                    <SkillBar label="Dominant" value={90} color="#06B6D4" />
+                    <SkillBar label="Structure Preference" value={personalityData[0].value * 10} color="#06B6D4" />
                   </motion.div>
                   <motion.div variants={itemVariants}>
-                    <SkillBar label="Pattern Recognition" value={85} color="#8B5CF6" />
+                    <SkillBar label="Risk Appetite" value={personalityData[1].value * 10} color="#8B5CF6" />
                   </motion.div>
                   <motion.div variants={itemVariants}>
-                    <SkillBar label="Decision Speed" value={88} color="#10B981" />
+                    <SkillBar label="Independence Level" value={personalityData[2].value * 10} color="#10B981" />
                   </motion.div>
                 </motion.div>
                 <motion.div 
@@ -430,13 +434,13 @@ export default function DNAResultsPage() {
                 </p>
               </motion.div>
 
-              {/* Superpowers Grid */}
+              {/* Superpowers Grid - Flexible based on count */}
               <motion.div 
                 variants={containerVariants}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="grid md:grid-cols-3 gap-6 mb-12"
+                className={`grid gap-6 mb-12 ${(edge.superpowers || []).length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}
               >
                 {(edge.superpowers || []).map((p: any, i: number) => (
                   <motion.div 
@@ -634,7 +638,7 @@ export default function DNAResultsPage() {
               ))}
             </div>
             
-            {/* Gauges - Responsive grid */}
+            {/* Gauges - Responsive grid with real data */}
             <motion.div 
               variants={containerVariants}
               initial="hidden"
@@ -643,16 +647,40 @@ export default function DNAResultsPage() {
               className="grid grid-cols-2 md:grid-cols-4 gap-6"
             >
               <motion.div variants={itemVariants}>
-                <Gauge value={archetype.founder_market_fit_score || 75} label="Market Fit" color="#10B981" />
+                <Gauge 
+                  value={archetype.founder_market_fit_score || 75} 
+                  label="Market Fit" 
+                  sublabel="Alignment"
+                  color="#10B981" 
+                  size={140}
+                />
               </motion.div>
               <motion.div variants={itemVariants}>
-                <Gauge value={parseInt(answers?.risk_security || "5") * 10} label="Risk" color="#06B6D4" />
+                <Gauge 
+                  value={safeParseInt(answers?.risk_security ?? dna?.cognitive_profile?.risk_preference, 5) * 10} 
+                  label="Risk Tolerance" 
+                  sublabel="Appetite"
+                  color="#06B6D4" 
+                  size={140}
+                />
               </motion.div>
               <motion.div variants={itemVariants}>
-                <Gauge value={parseInt(answers?.individual_tribal || "5") * 10} label="Independence" color="#8B5CF6" />
+                <Gauge 
+                  value={safeParseInt(answers?.individual_tribal ?? dna?.cognitive_profile?.individual_preference, 5) * 10} 
+                  label="Independence" 
+                  sublabel="Autonomy"
+                  color="#8B5CF6" 
+                  size={140}
+                />
               </motion.div>
               <motion.div variants={itemVariants}>
-                <Gauge value={parseInt(answers?.structure_chaos || "5") * 10} label="Structure" color="#F59E0B" />
+                <Gauge 
+                  value={safeParseInt(answers?.structure_chaos ?? dna?.cognitive_profile?.structure_preference, 5) * 10} 
+                  label="Structure" 
+                  sublabel="Organization"
+                  color="#F59E0B" 
+                  size={140}
+                />
               </motion.div>
             </motion.div>
           </motion.div>
