@@ -156,35 +156,58 @@ export default function DNAResultsPage() {
     );
   }
 
-  // Extract all DNA data
-  const archetype = dna.archetype || {};
-  const cognitive = dna.cognitive_profile || {};
-  const edge = dna.the_edge || {};
-  const shadow = dna.the_shadow || {};
-  const ventureFit = dna.venture_fit || {};
-  const playbook = dna.playbook || {};
-  const dynamics = dna.relationship_dynamics || {};
+  // Extract all DNA data with deep fallbacks
+  const archetype = dna?.archetype || {};
+  const cognitive = dna?.cognitive_profile || {};
+  const edge = dna?.the_edge || {};
+  const shadow = dna?.the_shadow || {};
+  const ventureFit = dna?.venture_fit || {};
+  const playbook = dna?.playbook || {};
+  const dynamics = dna?.relationship_dynamics || {};
 
-  const parseContent = (content: string | undefined, fallback: any[]) => {
-    if (!content || typeof content !== 'string' || content.length < 20) return fallback;
-    return [{ step: 1, title: "Strategy", description: content, action: "Apply" }];
+  // Helper to safely normalize playbook arrays
+  const normalizePlaybookArray = (content: any, fallback: any[]): any[] => {
+    if (!content) return fallback;
+    if (Array.isArray(content) && content.length > 0) {
+      // Validate that items have required fields
+      return content.filter((item: any) => 
+        item && typeof item === 'object' && 
+        (item.step !== undefined || item.title !== undefined)
+      ).map((item: any, idx: number) => ({
+        step: item.step || idx + 1,
+        title: item.title || "Step",
+        description: item.description || "",
+        action: item.action || "Apply",
+        ...item
+      }));
+    }
+    if (typeof content === 'string' && content.length > 20) {
+      return [{ step: 1, title: "Strategy", description: content, action: "Apply" }];
+    }
+    return fallback;
   };
 
   const playbookSections = [
-    { id: "decision", title: "Decision Framework", icon: <Scale className="w-5 h-5" />, color: "#8B5CF6", content: parseContent(playbook.decision_framework, fallbackPlaybook.framework) },
-    { id: "gtm", title: "Go-to-Market", icon: <Rocket className="w-5 h-5" />, color: "#06B6D4", content: parseContent(playbook.gtm_strategy, fallbackPlaybook.gtm) },
-    { id: "hiring", title: "First Hire", icon: <Users className="w-5 h-5" />, color: "#10B981", content: parseContent(playbook.first_hire, fallbackPlaybook.hiring) },
-    { id: "funding", title: "Funding", icon: <TrendingUp className="w-5 h-5" />, color: "#F59E0B", content: parseContent(playbook.fundraising_approach, fallbackPlaybook.funding) },
-    { id: "wellness", title: "Wellness", icon: <Heart className="w-5 h-5" />, color: "#EC4899", content: (playbook.burnout_signals || []).length > 0 ? [{ step: 1, title: "Burnout", description: playbook.burnout_signals.join(". "), action: "Watch" }] : fallbackPlaybook.wellness },
+    { id: "decision", title: "Decision Framework", icon: <Scale className="w-5 h-5" />, color: "#8B5CF6", content: normalizePlaybookArray(playbook.decision_framework, fallbackPlaybook.framework) },
+    { id: "gtm", title: "Go-to-Market", icon: <Rocket className="w-5 h-5" />, color: "#06B6D4", content: normalizePlaybookArray(playbook.gtm_strategy, fallbackPlaybook.gtm) },
+    { id: "hiring", title: "First Hire", icon: <Users className="w-5 h-5" />, color: "#10B981", content: normalizePlaybookArray(playbook.first_hire, fallbackPlaybook.hiring) },
+    { id: "funding", title: "Funding", icon: <TrendingUp className="w-5 h-5" />, color: "#F59E0B", content: normalizePlaybookArray(playbook.fundraising_approach || playbook.funding, fallbackPlaybook.funding) },
+    { id: "wellness", title: "Wellness", icon: <Heart className="w-5 h-5" />, color: "#EC4899", content: normalizePlaybookArray(playbook.wellness, fallbackPlaybook.wellness) },
   ];
 
+  const safeParseInt = (val: any, fallback = 5): number => {
+    if (val === undefined || val === null) return fallback;
+    const parsed = parseInt(String(val), 10);
+    return isNaN(parsed) ? fallback : parsed;
+  };
+
   const personalityData = [
-    { label: "Structure", value: parseInt(answers?.structure_chaos || "5") },
-    { label: "Risk", value: parseInt(answers?.risk_security || "5") },
-    { label: "Individual", value: parseInt(answers?.individual_tribal || "5") },
-    { label: "Vision", value: parseInt(answers?.vision_execution || "5") },
-    { label: "Innovation", value: parseInt(answers?.innovation_optimization || "5") },
-    { label: "Speed", value: parseInt(answers?.speed_quality || "5") },
+    { label: "Structure", value: safeParseInt(answers?.structure_chaos, 5) },
+    { label: "Risk", value: safeParseInt(answers?.risk_security, 5) },
+    { label: "Individual", value: safeParseInt(answers?.individual_tribal, 5) },
+    { label: "Vision", value: safeParseInt(answers?.vision_execution, 5) },
+    { label: "Innovation", value: safeParseInt(answers?.innovation_optimization, 5) },
+    { label: "Speed", value: safeParseInt(answers?.speed_quality, 5) },
   ];
 
   const descriptionBullets = parseDescriptionToBullets(archetype.description);
