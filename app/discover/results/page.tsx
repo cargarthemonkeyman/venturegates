@@ -45,11 +45,26 @@ export default function ResultsPage() {
     const loadData = () => {
       try {
         const resultJson = localStorage.getItem("ventureGates_result");
-        if (!resultJson) { router.push("/discover"); return; }
+        console.log("[Results] Raw result:", resultJson?.substring(0, 200));
+        if (!resultJson) { 
+          console.log("[Results] No result found, redirecting to /discover");
+          router.push("/discover"); 
+          return; 
+        }
         const parsedData = JSON.parse(resultJson);
-        if (!parsedData.venture_dna || !parsedData.ventures) { router.push("/discover"); return; }
+        console.log("[Results] Parsed data:", parsedData);
+        console.log("[Results] venture_dna:", parsedData?.venture_dna);
+        console.log("[Results] ventures:", parsedData?.ventures);
+        if (!parsedData.venture_dna || !parsedData.ventures) { 
+          console.log("[Results] Missing venture_dna or ventures, redirecting");
+          router.push("/discover"); 
+          return; 
+        }
         setData(parsedData);
-      } catch (error) { router.push("/discover"); }
+      } catch (error) { 
+        console.error("[Results] Error loading data:", error);
+        router.push("/discover"); 
+      }
       finally { setIsLoading(false); }
     };
     loadData();

@@ -163,7 +163,10 @@ export default function ProcessingVenturesPage() {
         ventures: newVentures.filter(v => !v.error),
         answers: answers
       };
+      console.log("[Processing Ventures] Saving resultData:", resultData);
+      console.log("[Processing Ventures] Ventures count:", resultData.ventures.length);
       localStorage.setItem(RESULT_KEY, JSON.stringify(resultData));
+      console.log("[Processing Ventures] Saved to localStorage");
       
       setTimeout(() => {
         setCompleted(true);
