@@ -330,39 +330,32 @@ export default function DNAResultsPage() {
       </header>
 
       <main className="relative z-10 pt-24 pb-32">
-        {/* Hero - SIN ANIMACIONES para debug */}
+        {/* Hero */}
         <section ref={heroRef} className="max-w-6xl mx-auto px-6 mb-20">
-          <div className="text-center mb-12">
-            <Badge className="mb-4 bg-gradient-to-r from-cyan-50 to-violet-50 text-cyan-700 border-cyan-200 px-4 py-1.5 text-sm font-medium">
+          <div className="text-center mb-12" style={{ minHeight: '300px' }}>
+            <div className="inline-block mb-4 px-4 py-2 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-full text-sm font-medium">
               Founder DNA Analysis
-            </Badge>
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 text-neutral-900">
-              {archetype.name || "Loading..."}
+            </div>
+            <h1 
+              className="text-5xl md:text-7xl font-bold mb-4" 
+              style={{ color: '#171717', display: 'block', visibility: 'visible' }}
+            >
+              {archetype?.name || "The Visionary Architect"}
             </h1>
-            <p className="text-xl md:text-2xl text-neutral-500 max-w-2xl mx-auto font-light">
-              {archetype.tagline || "Your founder profile is being generated..."}
+            <p 
+              className="text-xl md:text-2xl max-w-2xl mx-auto font-light"
+              style={{ color: '#737373', display: 'block', visibility: 'visible' }}
+            >
+              {archetype?.tagline || "You build bold visions with systematic precision."}
             </p>
           </div>
 
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16"
-          >
-            <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-              <StatCard value={archetype.founder_market_fit_score || 75} label="Market Fit" color="#06B6D4" delay={0.1} />
-            </motion.div>
-            <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-              <StatCard value={(edge.superpowers || []).length} label="Superpowers" color="#8B5CF6" delay={0.2} />
-            </motion.div>
-            <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-              <StatCard value={(shadow.cognitive_biases || []).length} label="Biases" color="#F59E0B" delay={0.3} />
-            </motion.div>
-            <motion.div variants={itemVariants} whileHover={{ y: -4, transition: { duration: 0.2 } }}>
-              <StatCard value={ventureFit.sweet_spot?.type || "B2C"} label="Sweet Spot" color="#10B981" delay={0.4} />
-            </motion.div>
-          </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+            <StatCard value={archetype?.founder_market_fit_score || 75} label="Market Fit" color="#06B6D4" />
+            <StatCard value={(edge?.superpowers || []).length} label="Superpowers" color="#8B5CF6" />
+            <StatCard value={(shadow?.cognitive_biases || []).length} label="Biases" color="#F59E0B" />
+            <StatCard value={ventureFit?.sweet_spot?.type || "B2C"} label="Sweet Spot" color="#10B981" />
+          </div>
 
           {/* Operating System - Description as bullet points */}
           <motion.div
@@ -706,50 +699,28 @@ export default function DNAResultsPage() {
             </div>
             
             {/* Gauges - Responsive grid with real data */}
-            <motion.div 
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6"
-            >
-              <motion.div variants={itemVariants}>
-                <Gauge 
-                  value={archetype.founder_market_fit_score || 75} 
-                  label="Market Fit" 
-                  sublabel="Alignment"
-                  color="#10B981" 
-                  size={140}
-                />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <Gauge 
-                  value={safeParseInt(answers?.risk_security ?? dna?.cognitive_profile?.risk_preference, 5) * 10} 
-                  label="Risk Tolerance" 
-                  sublabel="Appetite"
-                  color="#06B6D4" 
-                  size={140}
-                />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <Gauge 
-                  value={safeParseInt(answers?.individual_tribal ?? dna?.cognitive_profile?.individual_preference, 5) * 10} 
-                  label="Independence" 
-                  sublabel="Autonomy"
-                  color="#8B5CF6" 
-                  size={140}
-                />
-              </motion.div>
-              <motion.div variants={itemVariants}>
-                <Gauge 
-                  value={safeParseInt(answers?.structure_chaos ?? dna?.cognitive_profile?.structure_preference, 5) * 10} 
-                  label="Structure" 
-                  sublabel="Organization"
-                  color="#F59E0B" 
-                  size={140}
-                />
-              </motion.div>
-            </motion.div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <Gauge 
+                value={archetype.founder_market_fit_score || 75} 
+                label="Market Fit" 
+                color="#10B981" 
+              />
+              <Gauge 
+                value={safeParseInt(answers?.risk_security, 5) * 10} 
+                label="Risk Tolerance" 
+                color="#06B6D4" 
+              />
+              <Gauge 
+                value={safeParseInt(answers?.individual_tribal, 5) * 10} 
+                label="Independence" 
+                color="#8B5CF6" 
+              />
+              <Gauge 
+                value={safeParseInt(answers?.structure_chaos, 5) * 10} 
+                label="Structure" 
+                color="#F59E0B" 
+              />
+            </div>
           </motion.div>
         </section>
 
