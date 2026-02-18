@@ -115,23 +115,39 @@ export default function DNAResultsPage() {
     const savedDNA = localStorage.getItem(DNA_KEY);
     const savedAnswers = localStorage.getItem(ANSWERS_KEY);
     
+    console.log("[DNA Results] Raw savedDNA:", savedDNA?.substring(0, 200));
+    console.log("[DNA Results] Raw savedAnswers:", savedAnswers?.substring(0, 200));
+    
     if (savedDNA) {
       try {
         const parsed = JSON.parse(savedDNA);
-        const dnaData = parsed.founder_dna || parsed.venture_dna || parsed;
+        console.log("[DNA Results] Parsed DNA:", parsed);
+        
+        // API returns { founder_dna: { archetype, cognitive_profile, ... } }
+        // Smart fallback also returns { founder_dna: { ... } }
+        // So we need to unwrap it
+        const dnaData = parsed.founder_dna || parsed;
+        console.log("[DNA Results] Extracted dnaData:", dnaData);
+        console.log("[DNA Results] archetype:", dnaData?.archetype);
+        
         setDna(dnaData);
-        console.log("Loaded DNA:", dnaData);
       } catch (e) {
-        console.error("Failed to parse DNA:", e);
+        console.error("[DNA Results] Failed to parse DNA:", e);
       }
+    } else {
+      console.warn("[DNA Results] No saved DNA found");
     }
     
     if (savedAnswers) {
       try {
-        setAnswers(JSON.parse(savedAnswers));
+        const parsedAnswers = JSON.parse(savedAnswers);
+        console.log("[DNA Results] Loaded answers:", parsedAnswers);
+        setAnswers(parsedAnswers);
       } catch (e) {
-        console.error("Failed to parse answers:", e);
+        console.error("[DNA Results] Failed to parse answers:", e);
       }
+    } else {
+      console.warn("[DNA Results] No saved answers found");
     }
     
     setLoading(false);

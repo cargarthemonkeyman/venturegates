@@ -12,98 +12,51 @@ interface GaugeProps {
   size?: number;
 }
 
-const gaugeInterpretations: Record<string, Record<number, string>> = {
-  "Market Fit": {
-    90: "Exceptional alignment with your ideal market",
-    75: "Strong market fit with growth potential",
-    60: "Moderate fit - niche adjustments needed",
-    50: "Needs strategic repositioning",
-  },
-  "Risk": {
-    90: "High risk tolerance - moonshot ready",
-    75: "Comfortable with calculated risks",
-    50: "Balanced risk approach",
-    30: "Risk-averse - consider gradual exposure",
-  },
-  "Independence": {
-    90: "Strong solo founder potential",
-    75: "Can lead independently with support",
-    50: "Balanced - team player with autonomy",
-    30: "Thrives in collaborative environments",
-  },
-  "Structure": {
-    90: "Highly organized systematic approach",
-    75: "Good balance of structure and flexibility",
-    50: "Adaptive to different environments",
-    30: "Thrives in dynamic unstructured settings",
-  },
-};
-
-function getInterpretation(label: string, value: number): string {
-  const interpretations = gaugeInterpretations[label];
-  if (!interpretations) return "";
-  
-  const thresholds = Object.keys(interpretations).map(Number).sort((a, b) => b - a);
-  for (const threshold of thresholds) {
-    if (value >= threshold) return interpretations[threshold];
-  }
-  return interpretations[thresholds[thresholds.length - 1]] || "";
-}
-
 export function Gauge({ 
   value, 
   max = 100, 
   label, 
-  sublabel,
   color = "#06B6D4",
-  size = 140 
+  size = 120 
 }: GaugeProps) {
-  const strokeWidth = 8;
-  const radius = (size - strokeWidth) / 2;
+  const strokeWidth = 10;
+  const radius = (size - strokeWidth) / 2 - 4; // padding
   const circumference = radius * 2 * Math.PI;
-  const arcLength = circumference * 0.75;
-  const progress = (value / max) * arcLength;
+  const arcLength = circumference * 0.75; // 270 degrees (3/4 circle)
+  const progress = Math.min((value / max) * arcLength, arcLength);
   
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
   const [isHovered, setIsHovered] = useState(false);
   
-  const interpretation = getInterpretation(label, value);
+  // Calculate percentage for display
+  const percentage = Math.round((value / max) * 100);
   
   return (
     <motion.div 
       ref={ref}
-      className="flex flex-col items-center relative"
+      className="flex flex-col items-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.03 }}
       transition={{ duration: 0.2 }}
+      style={{ width: size + 20 }}
     >
-      {/* Tooltip */}
-      {isHovered && interpretation && (
-        <motion.div
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute -top-16 left-1/2 -translate-x-1/2 z-20 px-3 py-2 rounded-lg bg-neutral-900 text-white text-xs whitespace-nowrap pointer-events-none"
-        >
-          <div className="font-bold">{Math.round(value)}{max === 100 ? "%" : ""}</div>
-          <div className="text-neutral-300">{interpretation}</div>
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-neutral-900 rotate-45" />
-        </motion.div>
-      )}
-      
-      {/* Gauge Container */}
-      <div className="relative" style={{ width: size, height: size * 0.85 }}>
+      {/* Gauge SVG Container */}
+      <div 
+        className="relative flex items-center justify-center"
+        style={{ width: size, height: size * 0.75 }}
+      >
         <svg 
           width={size} 
-          height={size} 
-          className="overflow-visible -rotate-[135deg]"
-          style={{ position: 'absolute', top: 0, left: 0 }}
+          height={size * 0.75}
+          className="overflow-visible"
+          style={{ transform: 'rotate(-135deg)', transformOrigin: 'center' }}
         >
           {/* Background arc */}
           <circle
             cx={size / 2}
-            cy={size / 2}
+            cy={size * 0.75 / 2}
             r={radius}
             fill="none"
             stroke="rgba(0,0,0,0.08)"
@@ -115,7 +68,7 @@ export function Gauge({
           {/* Progress arc */}
           <motion.circle
             cx={size / 2}
-            cy={size / 2}
+            cy={size * 0.75 / 2}
             r={radius}
             fill="none"
             stroke={color}
@@ -124,41 +77,27 @@ export function Gauge({
             strokeLinecap="round"
             initial={{ strokeDasharray: `0 ${circumference}` }}
             animate={isInView ? { strokeDasharray: `${progress} ${circumference}` } : { strokeDasharray: `0 ${circumference}` }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
           />
         </svg>
         
-        {/* Value - Centered inside the arc area */}
-        <div 
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ 
-            top: `-${size * 0.05}px`, // Slight offset to center in the arc
-          }}
-        >
-          <motion.div 
-            className="flex flex-col items-center"
+        {/* Centered Value */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.span 
+            className="text-2xl font-bold"
+            style={{ color }}
             initial={{ opacity: 0, scale: 0.5 }}
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
           >
-            <span 
-              className="text-3xl font-bold leading-none"
-              style={{ color }}
-            >
-              {Math.round(value)}{max === 100 ? "%" : ""}
-            </span>
-            {sublabel && (
-              <span className="text-[10px] text-neutral-500 mt-0.5 uppercase tracking-wide">
-                {sublabel}
-              </span>
-            )}
-          </motion.div>
+            {percentage}%
+          </motion.span>
         </div>
       </div>
       
-      {/* Label - Below the gauge - solo label, no sublabel duplicado */}
-      <div className="text-center mt-2">
-        <div className="text-sm font-semibold text-neutral-900">{label}</div>
+      {/* Label below */}
+      <div className="text-center mt-2 px-2">
+        <p className="text-sm font-semibold text-neutral-900 leading-tight">{label}</p>
       </div>
     </motion.div>
   );
