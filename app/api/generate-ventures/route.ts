@@ -32,19 +32,36 @@ const ventureTemplates: Record<string, Array<{
   ]
 };
 
-const generateVenturePrompt = (template: any, dna: any, answers: any, index: number) => `Create VENTURE #${index + 1} for this founder.
+const generateVenturePrompt = (template: any, dna: any, answers: any, index: number) => {
+  const structure = parseInt(answers?.structure_chaos) || 5;
+  const risk = parseInt(answers?.risk_security) || 5;
+  const tribal = parseInt(answers?.individual_tribal) || 5;
+  const archetype = dna?.archetype?.name || 'Founder';
+  const superpowers = dna?.the_edge?.superpowers || [];
+  const sweetSpot = dna?.venture_fit?.sweet_spot?.type || 'B2C SaaS';
+  
+  return `Create VENTURE #${index + 1} specifically tailored for this founder's unique DNA.
 
-TEMPLATE:
+FOUNDER PROFILE (CRITICAL - USE THIS):
+- Archetype: ${archetype}
+- Structure Preference: ${structure}/10 (${structure >= 7 ? 'Highly structured' : structure <= 3 ? 'Highly flexible' : 'Balanced'})
+- Risk Tolerance: ${risk}/10 (${risk >= 7 ? 'High risk appetite' : risk <= 3 ? 'Risk averse' : 'Moderate'})
+- Collaboration Style: ${tribal}/10 (${tribal >= 7 ? 'Team-oriented' : tribal <= 3 ? 'Solo worker' : 'Flexible'})
+- Superpowers: ${superpowers.map((s: any) => s.name).join(', ') || 'Pattern recognition, rapid learning'}
+- Sweet Spot: ${sweetSpot}
+
+TEMPLATE (Customize heavily based on founder profile):
 - Name: ${template.name}
 - Category: ${template.category}
-- Problem: ${template.problemFocus}
+- Problem Focus: ${template.problemFocus}
 - Solution Angle: ${template.solutionAngle}
 
-FOUNDER DNA:
-- Archetype: ${dna.archetype?.name || 'Founder'}
-- Superpowers: ${dna.the_edge?.superpowers?.map((s: any) => s.name).join(', ') || 'Pattern recognition'}
-- Sweet Spot: ${dna.venture_fit?.sweet_spot?.type || 'B2C SaaS'}
-- Decision Style: ${dna.cognitive_profile?.decision_making || 'Intuitive'}
+INSTRUCTIONS:
+1. The venture MUST align with the founder's ${archetype} archetype
+2. Reference their specific superpowers: ${superpowers.map((s: any) => s.name).join(', ')}
+3. Adapt difficulty based on risk tolerance (${risk}/10)
+4. Consider collaboration preference (${tribal}/10) for team requirements
+5. Make it feel personalized, not generic
 
 Create detailed JSON:
 {
@@ -89,15 +106,19 @@ Rules:
 - Use SPECIFIC numbers, dates, channels
 - Reference founder's DNA in why_fits
 - Output ONLY valid JSON`;
+};
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   let ventureIndex = 0;
+  let answers: any = null;
+  let venture_dna: any = null;
   
   try {
     const body = await request.json();
-    const { answers, venture_dna, ventureIndex: idx = 0 } = body;
-    ventureIndex = idx;
+    answers = body.answers;
+    venture_dna = body.venture_dna;
+    ventureIndex = body.ventureIndex || 0;
 
     if (!answers || !venture_dna) {
       return NextResponse.json({ error: "Missing required data" }, { status: 400 });
@@ -109,6 +130,9 @@ export async function POST(request: NextRequest) {
     const template = templates[ventureIndex % templates.length];
 
     const prompt = generateVenturePrompt(template, dna, answers, ventureIndex);
+    
+    console.log(`[Venture API] Generating venture ${ventureIndex + 1} for archetype: ${dna?.archetype?.name}`);
+    console.log(`[Venture API] Structure: ${answers?.structure_chaos}, Risk: ${answers?.risk_security}, Tribal: ${answers?.individual_tribal}`);
 
     // Single attempt with 40s timeout
     const controller = new AbortController();
@@ -160,100 +184,126 @@ export async function POST(request: NextRequest) {
     const duration = Date.now() - startTime;
     console.error(`Venture generation failed after ${duration}ms:`, error);
     
-    // Return fallback instead of error
-    const fallbacks = [
-      {
-        id: "v1",
-        name: "AI Workflow Orchestrator",
-        tagline: "Connect your tools. Automate your work. Reclaim your time.",
-        category: "Automation",
-        description: "An intelligent automation platform that learns your work patterns and proactively suggests optimizations. Unlike Zapier which requires manual configuration, our AI observes how you work and offers one-click automation.",
-        problem: "Knowledge workers waste 40% of their time on context switching between apps.",
-        solution: "An AI layer that observes work patterns for 7-14 days, then proactively suggests automations.",
-        market_size: "$45B automation market, 23% CAGR",
-        business_model: "Freemium: Free for 3 automations, $29/mo unlimited, $79/mo teams",
-        go_to_market: "Product Hunt launch, Twitter/indie hacker community, Notion/Slack influencer partnerships",
-        why_fits: "Leverages pattern recognition strengths. Rapid iteration nature suits quick pivots.",
-        risk_factors: [
-          "Integration complexity - Mitigation: Start with top 10 tools",
-          "AI accuracy - Mitigation: Conservative suggestion algorithm",
-          "Incumbent response - Mitigation: Speed to market, niche focus"
-        ],
-        dna_match_score: 88,
-        difficulty: "Medium",
-        time_to_revenue: "4-6 weeks",
-        capital_required: "$3,000-$5,000",
-        execution_plan: [
-          { week: 1, focus: "Validation", tasks: ["Build landing page", "Run smoke test ads"], success_metric: "100 email signups" },
-          { week: 2, focus: "MVP", tasks: ["Build core integration", "Onboard 5 beta users"], success_metric: "3 active automations" },
-          { week: 3, focus: "Launch", tasks: ["Product Hunt launch", "Twitter thread campaign"], success_metric: "500 signups, 50 conversions" },
-          { week: 4, focus: "Iterate", tasks: ["Analyze usage patterns", "Add top-requested integration"], success_metric: "20% week-over-week growth" }
-        ],
-        unit_economics: { pricing: "$29/month", cac_estimate: "$45", ltv_estimate: "$520", payback_period: "2 months" },
-        testing_strategy: { method: "SMOKE_TEST", description: "Landing page + ads to validate demand", budget: "$200", timeline: "48 hours", success_criteria: "15% email CTR, 50+ signups" }
-      },
-      {
-        id: "v2",
-        name: "Community Intelligence Layer",
-        tagline: "Your community's knowledge, automatically organized",
-        category: "Community",
-        description: "An AI layer that captures, organizes and surfaces insights from Discord and Slack communities. Automatically answers repeated questions and surfaces valuable past discussions.",
-        problem: "Discord/Slack communities lose 90% of valuable knowledge. Same questions asked daily.",
-        solution: "AI that ingests community history, auto-answers questions, and surfaces relevant past discussions.",
-        market_size: "$12B community management software",
-        business_model: "$0.10 per member/month, $99/mo for analytics dashboard",
-        go_to_market: "Partner with community managers, launch on Discord/Slack app directories",
-        why_fits: "Matches tribal orientation. Community building plays to collaboration strengths.",
-        risk_factors: [
-          "Platform risk - Mitigation: Multi-platform support",
-          "Privacy concerns - Mitigation: Opt-in only, data controls",
-          "Accuracy issues - Mitigation: Community feedback loop"
-        ],
-        dna_match_score: 85,
-        difficulty: "Medium",
-        time_to_revenue: "3-5 weeks",
-        capital_required: "$2,500-$4,000",
-        execution_plan: [
-          { week: 1, focus: "Pilot", tasks: ["Build Discord bot", "Recruit 3 pilot communities"], success_metric: "3 active pilots" },
-          { week: 2, focus: "Refine", tasks: ["Improve answer accuracy", "Add Slack support"], success_metric: "70% answer relevance" },
-          { week: 3, focus: "Launch", tasks: ["Discord app directory listing", "Case studies"], success_metric: "10 paying communities" },
-          { week: 4, focus: "Scale", tasks: ["Onboarding flow", "Pricing optimization"], success_metric: "$500 MRR" }
-        ],
-        unit_economics: { pricing: "$0.10/member/month", cac_estimate: "$30", ltv_estimate: "$360", payback_period: "1 month" },
-        testing_strategy: { method: "CONCIERGE", description: "Manual community support for 3 communities", budget: "$0", timeline: "1 week", success_criteria: "Community managers request automation" }
-      },
-      {
-        id: "v3",
-        name: "Micro-SaaS Builder Kit",
-        tagline: "Launch your micro-SaaS in days, not months",
-        category: "Developer Tools",
-        description: "Pre-built infrastructure and AI code generation for rapid micro-SaaS deployment. Authentication, billing, admin panels included.",
-        problem: "Developers spend 80% of time on boilerplate instead of core product.",
-        solution: "Complete starter kit with auth, payments, admin, AI-assisted code generation.",
-        market_size: "$89B low-code/no-code platform market",
-        business_model: "$199 one-time license, $49/mo for updates and cloud hosting",
-        go_to_market: "Indie Hackers, Reddit r/SaaS, Twitter dev community",
-        why_fits: "Leverages technical skills. Solo-founder friendly. Quick to revenue.",
-        risk_factors: [
-          "Template quality - Mitigation: Battle-tested components",
-          "Support burden - Mitigation: Community Discord, documentation",
-          "Market saturation - Mitigation: Unique AI features"
-        ],
-        dna_match_score: 82,
-        difficulty: "Medium",
-        time_to_revenue: "2-4 weeks",
-        capital_required: "$1,000-$3,000",
-        execution_plan: [
-          { week: 1, focus: "Build", tasks: ["Create boilerplate", "Add AI codegen"], success_metric: "Working demo" },
-          { week: 2, focus: "Validate", tasks: ["Twitter announcement", "5 beta testers"], success_metric: "3 paid pre-orders" },
-          { week: 3, focus: "Launch", tasks: ["Product Hunt", "Indie Hackers post"], success_metric: "$1,000 sales" },
-          { week: 4, focus: "Iterate", tasks: ["Add requested features", "Improve docs"], success_metric: "$2,000 total sales" }
-        ],
-        unit_economics: { pricing: "$199", cac_estimate: "$25", ltv_estimate: "$298", payback_period: "Immediate" },
-        testing_strategy: { method: "FAKE_DOOR", description: "Landing page with 'Buy Now' → waitlist", budget: "$150", timeline: "72 hours", success_criteria: "5% CTR to pricing, 20+ waitlist" }
-      }
-    ];
+    // Return dynamic fallback based on user's DNA
+    // Note: venture_dna and answers may be undefined in catch block, use safe defaults
+    const safeAnswers = answers || {};
+    const safeDna = venture_dna || {};
+    const dna = safeDna.founder_dna || safeDna;
+    const structure = parseInt(safeAnswers.structure_chaos) || 5;
+    const risk = parseInt(safeAnswers.risk_security) || 5;
+    const tribal = parseInt(safeAnswers.individual_tribal) || 5;
+    const technical = String(safeAnswers.technical || '').toLowerCase();
+    const industries = safeAnswers.industries || [];
     
-    return NextResponse.json(fallbacks[ventureIndex % fallbacks.length]);
+    // Generate personalized fallback
+    const getPersonalizedFallback = () => {
+      const archetypeName = dna?.archetype?.name || "Founder";
+      const isTechnical = technical.includes('full_stack') || technical.includes('backend');
+      const isStructured = structure >= 6;
+      const isRisky = risk >= 6;
+      const isCollaborative = tribal >= 6;
+      
+      // Select category based on profile
+      let category = "Productivity";
+      let name = "AI-Powered Workflow Optimizer";
+      let tagline = "Automate the repetitive. Focus on what matters.";
+      
+      if (isTechnical && isStructured) {
+        category = "Developer Tools";
+        name = "Infrastructure Automation Platform";
+        tagline = "Deploy faster with intelligent infrastructure management.";
+      } else if (isCollaborative && !isStructured) {
+        category = "Community";
+        name = "Team Knowledge Hub";
+        tagline = "Capture and share team insights automatically.";
+      } else if (isRisky && !isStructured) {
+        category = "Fintech";
+        name = "Micro-Investment Aggregator";
+        tagline = "Smart investing for the next generation.";
+      } else if (industries.includes('health')) {
+        category = "Health";
+        name = "Personalized Wellness Coach";
+        tagline = "AI-powered health optimization tailored to you.";
+      }
+      
+      return {
+        id: `v${ventureIndex + 1}`,
+        name,
+        tagline,
+        category,
+        description: `A ${category.toLowerCase()} venture that leverages your unique strengths as ${archetypeName}. This opportunity aligns with your ${structure >= 6 ? 'structured approach' : 'adaptable style'} and ${risk >= 6 ? 'high-risk tolerance' : 'careful planning'}.`,
+        problem: `Founders like you struggle with ${isStructured ? 'inefficient processes' : 'rigid systems'} that don't match your working style.`,
+        solution: `A personalized platform that adapts to your ${archetypeName} profile, helping you ${isCollaborative ? 'collaborate effectively' : 'work efficiently solo'}.`,
+        market_size: "$15B+ addressable market",
+        business_model: "Freemium SaaS: $0-$49/month tiers",
+        go_to_market: "Product Hunt launch, niche community outreach, content marketing",
+        why_fits: `Matches your ${archetypeName} profile. Aligns with ${isStructured ? 'systematic' : 'flexible'} approach and ${isRisky ? 'growth-oriented' : 'sustainable'} mindset.`,
+        risk_factors: [
+          "Market timing - Mitigation: Start with niche, expand gradually",
+          "Competition - Mitigation: Differentiate through personalization",
+          "Technical complexity - Mitigation: MVP first, iterate based on feedback"
+        ],
+        dna_match_score: 75 + Math.floor(Math.random() * 15),
+        difficulty: isStructured ? "Medium" : "High",
+        time_to_revenue: "3-6 weeks",
+        capital_required: "$2,000-$5,000",
+        execution_plan: [
+          { week: 1, focus: "Validation", tasks: ["Build landing page", "Create waitlist"], success_metric: "50+ qualified signups" },
+          { week: 2, focus: "MVP", tasks: ["Build core feature", "Onboard 5 beta users"], success_metric: "3 active users" },
+          { week: 3, focus: "Launch", tasks: ["Product Hunt", "Community outreach"], success_metric: "200 signups, 20 paid" },
+          { week: 4, focus: "Iterate", tasks: ["User interviews", "Feature improvements"], success_metric: "15% week-over-week growth" }
+        ],
+        unit_economics: { 
+          pricing: "$29/month", 
+          cac_estimate: "$40", 
+          ltv_estimate: "$450", 
+          payback_period: "2 months" 
+        },
+        testing_strategy: { 
+          method: "SMOKE_TEST", 
+          description: "Landing page validation with targeted ads", 
+          budget: "$300", 
+          timeline: "1 week", 
+          success_criteria: "10%+ email CTR, 30+ qualified signups" 
+        },
+        // Ensure all required fields exist
+        offer: "Complete platform access with personalized onboarding",
+        why_now: "Market timing aligns with remote work trends and AI adoption",
+        market_gap: "Current solutions don't adapt to individual founder profiles",
+        competitors: [
+          { 
+            name: "Generic Competitor", 
+            what_they_do: "One-size-fits-all solution",
+            why_not_enough: "Doesn't account for founder personality differences"
+          }
+        ],
+        founder_market_fit: `Your ${archetypeName} profile gives you unique insight into this problem. Your ${isStructured ? 'systematic approach' : 'adaptability'} is perfect for ${isRisky ? 'moving fast' : 'building sustainably'}.`,
+        key_highlights: [
+          `Designed specifically for ${archetypeName} founders`,
+          `Aligns with your ${isStructured ? 'structured' : 'flexible'} working style`,
+          `Leverages your ${isCollaborative ? 'collaboration' : 'deep work'} strengths`,
+          `${isRisky ? 'High-growth potential' : 'Sustainable business model'}`
+        ],
+        gate_scores: {
+          personal_gates: {
+            skill_match: { score: isTechnical ? 4 : 3, reason: "Aligns with your technical background" },
+            energy_alignment: { score: isCollaborative ? 4 : 3, reason: "Matches your work style" },
+            experience_relevance: { score: 4, reason: "Builds on your founder experience" }
+          },
+          market_gates: {
+            market_size: { score: 4, reason: "$15B+ addressable market" },
+            timing: { score: 4, reason: "Favorable market conditions" }
+          },
+          product_gates: {
+            technical_feasibility: { score: isTechnical ? 5 : 3, reason: isTechnical ? "Within your technical wheelhouse" : "May need technical cofounder" }
+          },
+          business_gates: {
+            monetization_clarity: { score: 4, reason: "Clear SaaS revenue model" }
+          }
+        }
+      };
+    };
+    
+    return NextResponse.json(getPersonalizedFallback());
   }
 }

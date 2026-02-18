@@ -373,23 +373,58 @@ function getSmartFallbackDNA(
 ): DNAOutput {
   const stressResponse = String(answers.stress_response || answers.stress_management || '');
   const decisionStyle = String(answers.decision_style || answers.decision_making || '');
+  const motivation = String(answers.motivation || '');
+  const archetypeAnswer = String(answers.archetype || '');
 
-  const archetypes = [
-    { name: "The Visionary Architect", tagline: "You build bold visions with systematic precision." },
-    { name: "The Pragmatic Builder", tagline: "You create reliable systems that stand the test of time." },
-    { name: "The Chaos Pilot", tagline: "You thrive in uncertainty and navigate turbulence with instinct." },
-    { name: "The Agile Experimenter", tagline: "You test ideas rapidly, learning through constant iteration." },
-    { name: "The Tribal Leader", tagline: "You build movements by bringing people together." },
-    { name: "The Solo Strategist", tagline: "Your best work happens in deep focus, away from the crowd." },
-  ];
-
-  let archetype = archetypes[0];
-  if (structure >= 7 && risk >= 7) archetype = archetypes[0];
-  else if (structure >= 7 && risk <= 3) archetype = archetypes[1];
-  else if (structure <= 3 && risk >= 7) archetype = archetypes[2];
-  else if (structure <= 3 && risk <= 3) archetype = archetypes[3];
-  else if (tribal >= 7) archetype = archetypes[4];
-  else if (tribal <= 3) archetype = archetypes[5];
+  // Determinar archetype basado en múltiples factores
+  let archetypeName = "The Visionary Architect";
+  let archetypeTagline = "You build bold visions with systematic precision.";
+  
+  // Prioridad 1: Respuesta directa del wizard
+  if (archetypeAnswer === 'visionary') {
+    archetypeName = "The Visionary Architect";
+    archetypeTagline = "You build bold visions with systematic precision.";
+  } else if (archetypeAnswer === 'analyst') {
+    archetypeName = "The Systems Analyst";
+    archetypeTagline = "You find clarity in complexity through rigorous analysis.";
+  } else if (archetypeAnswer === 'diplomat') {
+    archetypeName = "The Network Builder";
+    archetypeTagline = "You create value through relationships and consensus.";
+  } else if (archetypeAnswer === 'explorer') {
+    archetypeName = "The Pathfinder";
+    archetypeTagline = "You discover opportunities where others see only uncertainty.";
+  }
+  // Prioridad 2: Basado en dimensiones de personalidad
+  else if (structure >= 7 && risk >= 7) {
+    archetypeName = "The Strategic Builder";
+    archetypeTagline = "You architect systems that scale with precision and bold vision.";
+  } else if (structure >= 7 && risk <= 3) {
+    archetypeName = "The Systems Architect";
+    archetypeTagline = "You create reliable infrastructure that stands the test of time.";
+  } else if (structure <= 3 && risk >= 7) {
+    archetypeName = "The Agile Innovator";
+    archetypeTagline = "You thrive in chaos, pivoting faster than markets shift.";
+  } else if (structure <= 3 && risk <= 3) {
+    archetypeName = "The Careful Experimenter";
+    archetypeTagline = "You validate before building, minimizing waste through research.";
+  } else if (tribal >= 7) {
+    archetypeName = "The Community Catalyst";
+    archetypeTagline = "You energize teams and build movements that matter.";
+  } else if (tribal <= 3) {
+    archetypeName = "The Solo Strategist";
+    archetypeTagline = "Your best work happens in deep focus, away from the crowd.";
+  }
+  // Prioridad 3: Basado en motivación
+  else if (motivation.includes('freedom')) {
+    archetypeName = "The Independence Seeker";
+    archetypeTagline = "You build to control your destiny and escape constraints.";
+  } else if (motivation.includes('impact')) {
+    archetypeName = "The Change Maker";
+    archetypeTagline = "You create to solve problems that touch millions.";
+  } else if (motivation.includes('mastery')) {
+    archetypeName = "The Craftsperson";
+    archetypeTagline = "You pursue excellence through continuous refinement.";
+  }
 
   const buildEvidence = (key: string, fallback: string): string => {
     const val = answers[key];
@@ -400,13 +435,21 @@ function getSmartFallbackDNA(
     return fallback;
   };
 
+  // Generar descripción específica basada en el perfil
+  const getDescription = () => {
+    const structureDesc = structure >= 7 ? 'structured, systematic approach' : structure <= 3 ? 'flexible, adaptive style' : 'balanced methodology';
+    const riskDesc = risk >= 7 ? 'high-risk appetite' : risk <= 3 ? 'cautious risk management' : 'calculated risk-taking';
+    const tribalDesc = tribal >= 7 ? 'collaborative energy' : tribal <= 3 ? 'independent focus' : 'balanced social needs';
+    return `Your founder DNA combines a ${structureDesc} with ${riskDesc} and ${tribalDesc}. This unique blend shapes how you identify opportunities, make decisions, and build teams.`;
+  };
+
   return {
     founder_dna: {
       archetype: {
-        name: archetype.name,
-        tagline: archetype.tagline,
-        description: `Your founder DNA emerges from ${structure}/10 structure preference, ${risk}/10 risk appetite, and ${tribal}/10 collaboration orientation. You excel at ${structure > 5 ? 'building scalable systems' : 'navigating ambiguity'} while ${tribal > 5 ? 'energizing teams' : 'maintaining focused execution'}.`,
-        founder_market_fit_score: Math.min(95, Math.max(60, 75 + Math.abs(structure - 5) + Math.abs(risk - 5))),
+        name: archetypeName,
+        tagline: archetypeTagline,
+        description: getDescription(),
+        founder_market_fit_score: Math.min(95, Math.max(60, 70 + Math.abs(structure - 5) * 3 + Math.abs(risk - 5) * 2)),
       },
       cognitive_profile: {
         dominant_function: structure > 5 ? "Systematic deconstruction of complex problems" : "Intuitive pattern-matching",
