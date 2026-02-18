@@ -22,6 +22,7 @@ import {
 
 const DNA_KEY = "ventureGates_dna";
 const VENTURES_KEY = "ventureGates_ventures";
+const RESULT_KEY = "ventureGates_result";
 const ANSWERS_KEY = "ventureGates_answers";
 
 const steps = [
@@ -139,6 +140,30 @@ export default function ProcessingVenturesPage() {
 
       setCurrentStep(5);
       setProgress(100);
+      
+      // Guardar en el formato que results espera
+      const resultData = {
+        venture_dna: {
+          entrepreneur_type: dna?.archetype?.name || "Founder",
+          type_description: dna?.archetype?.description || "",
+          non_negotiables: dna?.the_shadow?.cognitive_biases?.map((b: any) => ({ 
+            name: b.bias, 
+            description: b.mitigation 
+          })) || [],
+          accelerators: dna?.the_edge?.superpowers?.map((s: any) => ({ 
+            name: s.name, 
+            description: s.description 
+          })) || [],
+          red_flags: dna?.the_shadow?.blind_spots?.map((s: any) => ({ 
+            name: "Watch out", 
+            description: s 
+          })) || [],
+          enneagram_type: answers?.eneagram || ""
+        },
+        ventures: newVentures.filter(v => !v.error),
+        answers: answers
+      };
+      localStorage.setItem(RESULT_KEY, JSON.stringify(resultData));
       
       setTimeout(() => {
         setCompleted(true);
