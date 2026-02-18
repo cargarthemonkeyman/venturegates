@@ -65,9 +65,9 @@ export default function VentureDetailPage() {
   const [index, setIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    const slug = params?.slug;
-    if (!slug) { setError("Missing venture ID"); setLoading(false); return; }
-    const parsedIndex = parseInt(slug as string);
+    const id = params?.id;
+    if (!id) { setError("Missing venture ID"); setLoading(false); return; }
+    const parsedIndex = parseInt(id as string);
     if (isNaN(parsedIndex)) { setError("Invalid ID"); setLoading(false); return; }
     setIndex(parsedIndex);
     const resultJson = localStorage.getItem("ventureGates_result");
@@ -109,13 +109,8 @@ export default function VentureDetailPage() {
     );
   }
 
-  // Sample highlights if none provided
-  const highlights = venture.key_highlights || [
-    "Strong founder-market fit with your technical background",
-    "Growing market with 25% YoY growth in the sector",
-    "Clear path to profitability within 12 months",
-    "Differentiated positioning against existing competitors"
-  ];
+  // Use actual highlights or empty array
+  const highlights = venture.key_highlights || [];
 
   const personalScores = [
     { label: 'Energy Alignment', score: venture.gate_scores?.personal_gates?.energy_alignment?.score },
@@ -187,7 +182,7 @@ export default function VentureDetailPage() {
                   
                   <div className="flex gap-4">
                     <div className="text-center px-6 py-4 bg-gradient-to-br from-cyan-50 to-violet-50 rounded-2xl border border-neutral-200">
-                      <div className="text-3xl font-bold text-cyan-600">{venture.founder_market_fit_score}%</div>
+                      <div className="text-3xl font-bold text-cyan-600">{venture.founder_market_fit_score || venture.founder_market_fit_score === 0 ? `${venture.founder_market_fit_score}%` : 'N/A'}</div>
                       <div className="text-sm text-neutral-500">Founder Fit</div>
                     </div>
                     <div className="text-center px-6 py-4 bg-neutral-50 rounded-2xl border border-neutral-200">
@@ -293,31 +288,33 @@ export default function VentureDetailPage() {
             </Card>
           </motion.div>
 
-          {/* Key Highlights */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-          >
-            <Card className="bg-white border-neutral-200 hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                    <Award className="w-5 h-5 text-amber-600" />
+          {/* Key Highlights - Only show if we have real data */}
+          {highlights.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <Card className="bg-white border-neutral-200 hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                      <Award className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <h3 className="text-lg font-bold text-neutral-900">Key Highlights</h3>
                   </div>
-                  <h3 className="text-lg font-bold text-neutral-900">Key Highlights</h3>
-                </div>
-                <ul className="space-y-3">
-                  {highlights.map((highlight, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-neutral-700">{highlight}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
+                  <ul className="space-y-3">
+                    {highlights.map((highlight, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-neutral-700">{highlight}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
           {/* Founder-Market Fit */}
           <motion.div 

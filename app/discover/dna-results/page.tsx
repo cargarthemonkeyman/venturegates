@@ -276,10 +276,14 @@ export default function DNAResultsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5]">
-        <motion.div className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <div className="w-12 h-12 border-2 border-neutral-400 border-t-neutral-800 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-600">Loading your profile...</p>
-        </motion.div>
+        <div className="text-center">
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 border-4 border-cyan-200 rounded-full" />
+            <div className="absolute inset-0 border-4 border-cyan-500 rounded-full border-t-transparent animate-spin" />
+          </div>
+          <p className="text-neutral-600 text-lg">Analyzing your founder DNA...</p>
+          <p className="text-neutral-400 text-sm mt-2">This takes a moment</p>
+        </div>
       </div>
     );
   }
@@ -338,19 +342,11 @@ export default function DNAResultsPage() {
                 Founder DNA Analysis
               </span>
             </div>
-            {/* DEBUG: Mostrar datos crudos */}
-            <div className="hidden">
-              DEBUG: {JSON.stringify(dna?.archetype)}
-            </div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-4" style={{ color: '#000000' }}>
+            <h1 className="text-5xl md:text-7xl font-bold mb-4 text-neutral-900">
               {dna?.archetype?.name}
             </h1>
-            <p className="text-xl md:text-2xl max-w-2xl mx-auto mb-6" style={{ color: '#555555' }}>
+            <p className="text-xl md:text-2xl max-w-2xl mx-auto text-neutral-500">
               {dna?.archetype?.tagline}
-            </p>
-            {/* Descripción del arquetipo */}
-            <p className="text-base max-w-3xl mx-auto leading-relaxed" style={{ color: '#666666' }}>
-              {dna?.archetype?.description}
             </p>
           </div>
 
